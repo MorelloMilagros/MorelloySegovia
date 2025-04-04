@@ -1,41 +1,19 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trivia de Películas</title>
-    <link rel="stylesheet" href="../static/style.css">
-    
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <header>
-        <h1>Trivia de Peliculas</h1>
-        <p>¡Bienvenidos a la Trivia de Peliculas! Ingrese su nombre y el numero de frases que desea intentar reconocer.</p>
-    </header>
-    <div class="form-container">
-        <form action="/iniciar" method="POST">
-            <div class="form-group">
-                <label for="nombre">Nombre de usuario:</label>
-                <input type="text" id="nombre" name="nombre" required>
-            </div>
-            <div class="form-group">
-                <label for="frases">Número de frases (3-15):</label>
-                <input type="number" id="frases" name="frases" min="3" max="15" value="5" required>
-            </div>
-            <br><br>
-            <div class="form-group">
-                <button type="submit" class="btn btn-primary">Iniciar Trivia</button>
-            </div>
+    <div class="container">
+        <h1>Trivia de Películas</h1>
+        <form action="/iniciar" method="post">
+            <input type="text" name="usuario" placeholder="Nombre de usuario" required>
+            <input type="number" name="num_frases" min="3" placeholder="Número de frases" required>
+            <button type="submit">Iniciar Juego</button>
         </form>
- 
+        <a href="/peliculas"><button>Ver Películas</button></a>
+        <a href="/resultados"><button>Resultados Históricos</button></a>
     </div>
-    <div class="action-buttons">
-        <a href="/listar" class="btn btn-secondary">Listado de Películas</a>
-        <a href="/Ver_historial" class="btn btn-secondary">Ver Historial</a>
-    </div>
-        
-    <footer class="footer">
-        <p>TP1 N° 1 Morello, Segovia</p>
-    </footer>
-</body>    
+</body>
 </html>

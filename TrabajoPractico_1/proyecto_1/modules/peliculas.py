@@ -1,35 +1,24 @@
-# módulo para organizar funciones o clases utilizadas en nuestro proyecto
-# Crear tantos módulos como sea necesario para organizar el código
-def cargar_peliculas(archivo='../data/frases_de_peliculas.txt'):
-#Carga el archivo de frases y devuelve una lista de diccionarios {frase, pelicula}
-    peliculas = []
-    with open(archivo, 'r', encoding='utf-8') as f:
-        for linea in f:
-            if ';' in linea:
-                frase, pelicula = linea.split(';', 1)
-                peliculas.append({
-                    'frase': frase.strip(),
-                    'pelicula': pelicula.strip().title()  # Estandariza mayúsculas
-                })
-    return peliculas
+import random
+ruta_archivo = "TrabajoPractico_1\proyecto_1\data\frases_de_peliculas.txt"
 
-def obtener_peliculas_unicas():
-#Devuelve nombres de películas únicos y ordenados
-    peliculas = cargar_peliculas()
-    return sorted(list({p['pelicula'] for p in peliculas}))
 
-def generar_trivia(num_preguntas):
-#Genera preguntas aleatorias con opciones múltiples
-    peliculas = cargar_peliculas()
-    preguntas = random.sample(peliculas, num_preguntas)
-    
-    for p in preguntas:
-        opciones = random.sample(
-            [pel for pel in obtener_peliculas_unicas() if pel != p['pelicula']],
-            2
-        )
-        opciones.append(p['pelicula'])
-        random.shuffle(opciones)
-        p['opciones'] = opciones
-    
-    return preguntas
+class GestorPeliculas:
+    def __init__(self, ruta_archivo):
+        self.ruta_archivo = ruta_archivo
+        self.frases = []
+        self.peliculas = set()
+
+    def cargar_datos(self):
+        with open(self.ruta_archivo, 'r', encoding='utf-8') as f:
+            for linea in f:
+                frase, pelicula = linea.strip().split(';')
+                self.frases.append((frase, pelicula.strip()))
+                self.peliculas.add(pelicula.strip().lower())
+
+    def obtener_peliculas_ordenadas(self):
+        return sorted(self.peliculas)
+
+    def obtener_frase_aleatoria(self, excluir=None):
+        excluir = excluir or []
+        disponibles = [f for f in self.frases if f not in excluir]
+        return random.choice(disponibles) if disponibles else None

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gráficas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Gráficas de Resultados</h1>
+        <h3>Gráfica Lineal (Aciertos vs. Desaciertos)</h3>
+        <img src="{{ url_for('static', filename='graficas/' + grafica_lineal) }}" alt="Gráfica Lineal">
+        <h3>Gráfica Circular (Aciertos Acumulados)</h3>
+        <img src="{{ url_for('static', filename='graficas/' + grafica_circular) }}" alt="Gráfica Circular">
+        <a href="/resultados"><button>Volver a Resultados</button></a>
+    </div>
+</body>
+</html>

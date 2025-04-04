@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Juego</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>{{ frase }}</h2>
+        <form action="/verificar" method="post">
+            {% for opcion in opciones %}
+                <label>
+                    <input type="radio" name="pelicula" value="{{ opcion }}" required> {{ opcion }}
+                </label><br>
+            {% endfor %}
+            <button type="submit">Continuar</button>
+        </form>
+        <p>Aciertos: {{ session.aciertos }}/{{ session.num_frases }}</p>
+    </div>
+</body>
+</html>
