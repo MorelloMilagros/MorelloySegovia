@@ -1,3 +1,6 @@
+from modules.peliculas import cargar_peliculas, obtener_peliculas_unicas, generar_trivia
+from modules.resultados import guardar_resultado, obtener_historial, generar_grafico_curvas
+
 # Ejemplo de aplicación principal en Flask
 from flask import Flask,  render_template, redirect, request , url_for, flash
 import json
