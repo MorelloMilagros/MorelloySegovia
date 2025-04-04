@@ -1,3 +1,3 @@
 from flask import Flask
 
-app = Flask("server")
+app = Flask("server", static_folder='static')
