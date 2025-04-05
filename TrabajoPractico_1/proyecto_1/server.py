@@ -1,88 +1,95 @@
-from flask import Flask, render_template, request, session, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for
 from modules.peliculas import GestorPeliculas
 from modules.trivia import Trivia
 from modules.resultados import GestorResultados
 import os
 
-# Configuración de Flask
-app = Flask(__name__, static_folder="static")
-app.secret_key = "clave_super_secreta_123!"  # ¡Cambia esta clave!
+app = Flask(__name__)
+app.secret_key = 'clave_segura_para_flask_1234567890'
 
-# Inicializar módulos
-gestor_peliculas = GestorPeliculas("data/frases_de_peliculas.txt")
+# Configuración de rutas
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+RUTA_DATOS = os.path.join(BASE_DIR, 'data', 'frases_de_peliculas.txt')
+RUTA_RESULTADOS = os.path.join(BASE_DIR, 'data', 'resultados.json')
+
+# Inicialización
+gestor_peliculas = GestorPeliculas(RUTA_DATOS)
 gestor_peliculas.cargar_datos()
-gestor_resultados = GestorResultados("data/resultados.json")
+gestor_resultados = GestorResultados(RUTA_RESULTADOS)
 
-# -------------------- Rutas --------------------
-@app.route("/")
+# Estado del juego
+juego_actual = {
+    'trivia': None,
+    'frase_actual': None,
+    'correcta_actual': None
+}
+
+@app.route('/')
 def inicio():
-    """Muestra la página principal con el formulario de inicio"""
-    return render_template("inicio.html")
+    return render_template('inicio.html')
 
-@app.route("/iniciar", methods=["POST"])
+@app.route('/iniciar', methods=['POST'])
 def iniciar_juego():
-    """Inicia una nueva partida"""
-    session.clear()
-    session["usuario"] = request.form["usuario"]
-    session["num_frases"] = int(request.form["num_frases"])
-    session["aciertos"] = 0
-    session["frases_usadas"] = []
-    return redirect(url_for("juego"))
-
-@app.route("/juego")
-def juego():
-    """Muestra una pregunta de la trivia"""
-    if len(session.get("frases_usadas", [])) >= session["num_frases"]:
-        return redirect(url_for("finalizar"))
-
+    usuario = request.form['usuario']
+    num_frases = int(request.form['num_frases'])
+    
     trivia = Trivia(gestor_peliculas)
+    trivia.iniciar_juego(usuario, num_frases)
+    
+    # Generar primera pregunta
     frase, correcta, opciones = trivia.generar_opciones()
     
-    if not frase:  # Si no hay más frases disponibles
-        return redirect(url_for("finalizar"))
+    # Guardar estado del juego
+    juego_actual['trivia'] = trivia
+    juego_actual['frase_actual'] = frase
+    juego_actual['correcta_actual'] = correcta
+    juego_actual['opciones_actuales'] = opciones
     
-    session["frase_actual"] = frase
-    session["correcta_actual"] = correcta
-    session["opciones_actuales"] = opciones
-    session["frases_usadas"].append((frase, correcta))
-    
-    return render_template("juego.html", 
-                         frase=frase, 
+    return render_template('juego.html',
+                         frase=frase,
                          opciones=opciones,
-                         aciertos=session["aciertos"],
-                         total=session["num_frases"])
+                         aciertos=0,
+                         total=num_frases)
 
-@app.route("/verificar", methods=["POST"])
+@app.route('/verificar', methods=['POST'])
 def verificar_respuesta():
-    """Verifica si la respuesta del usuario es correcta"""
-    respuesta = request.form.get("pelicula", "").strip().lower()
-    correcta = session["correcta_actual"].lower()
+    if not juego_actual['trivia']:
+        return redirect(url_for('inicio'))
     
-    if respuesta == correcta:
-        session["aciertos"] += 1
+    trivia = juego_actual['trivia']
+    respuesta = request.form.get('respuesta')
+    correcta = juego_actual['correcta_actual']
     
-    if len(session["frases_usadas"]) < session["num_frases"]:
-        return redirect(url_for("juego"))
-    else:
-        return redirect(url_for("finalizar"))
-
-@app.route("/finalizar")
-def finalizar():
-    """Muestra los resultados finales y guarda el historial"""
-    gestor_resultados.guardar_resultado(
-        session["usuario"],
-        session["aciertos"],
-        session["num_frases"]
-    )
-    return render_template("final.html",
-                         aciertos=session["aciertos"],
-                         total=session["num_frases"])
-
-@app.route("/peliculas")
-def listar_peliculas():
-    """Muestra el listado de todas las películas"""
-    peliculas = gestor_peliculas.obtener_peliculas_ordenadas()
-    return render_template("peliculas.html", peliculas=peliculas)
+    # Verificar respuesta
+    if respuesta and respuesta.lower() == correcta.lower():
+        trivia.aciertos += 1
+    
+    # Generar nueva pregunta
+    frase, correcta, opciones = trivia.generar_opciones()
+    
+    # Verificar si el juego terminó
+    if not frase or len(trivia.frases_usadas) > trivia.num_frases:
+        # Guardar resultados
+        gestor_resultados.guardar_resultado(
+            trivia.usuario,
+            trivia.aciertos,
+            trivia.num_frases
+        )
+        return render_template('final.html',
+                            usuario=trivia.usuario,
+                            aciertos=trivia.aciertos,
+                            total=trivia.num_frases)
+    
+    # Actualizar estado del juego
+    juego_actual['frase_actual'] = frase
+    juego_actual['correcta_actual'] = correcta
+    juego_actual['opciones_actuales'] = opciones
+    
+    return render_template('juego.html',
+                         frase=frase,
+                         opciones=opciones,
+                         aciertos=trivia.aciertos,
+                         total=trivia.num_frases)
 
 @app.route("/resultados")
 def mostrar_resultados():
@@ -91,12 +98,10 @@ def mostrar_resultados():
                          resultados=gestor_resultados.datos)
 
 @app.route("/graficas")
-def generar_graficas():
-    """Genera y muestra las gráficas"""
-    gestor_resultados.generar_grafica("lineal")
-    gestor_resultados.generar_grafica("circular")
-    return render_template("graficas.html")
+def mostrar_graficas():
+    grafica_circular = gestor_resultados.generar_grafica_circular()
+    grafica_lineal = gestor_resultados.generar_grafica_evolucion()
 
-# -------------------- Ejecutar la app --------------------
-if __name__ == "__main__":
+    return render_template("graficas.html",grafica_circular=grafica_circular, grafica_lineal=grafica_lineal,resultados=gestor_resultados.datos[-10:])
+if __name__ == '__main__':
     app.run(debug=True)

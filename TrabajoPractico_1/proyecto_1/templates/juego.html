@@ -8,14 +8,15 @@
     <div class="container">
         <h2>{{ frase }}</h2>
         <form action="/verificar" method="post">
+            <input type="hidden" name="correcta" value="{{ correcta }}">
             {% for opcion in opciones %}
                 <label>
-                    <input type="radio" name="pelicula" value="{{ opcion }}" required> {{ opcion }}
+                    <input type="radio" name="respuesta" value="{{ opcion }}" required> {{ opcion }}
                 </label><br>
             {% endfor %}
             <button type="submit">Continuar</button>
         </form>
-        <p>Aciertos: {{ session.aciertos }}/{{ session.num_frases }}</p>
+        <p>Aciertos: {{ aciertos }}</p>
     </div>
 </body>
 </html>

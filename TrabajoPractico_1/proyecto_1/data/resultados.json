@@ -1,7 +1,16 @@
 [
     {
-        "usuario": "Milagros",
-        "fecha": "04/04/25 17:09",
-        "resultado": "2/3"
+        "usuario": "asda",
+        "fecha": "04-04-25 23:18:18",
+        "resultado": "3/3",
+        "aciertos": 3,
+        "desaciertos": 0
+    },
+    {
+        "usuario": "emi",
+        "fecha": "04-04-25 23:19:19",
+        "resultado": "2/3",
+        "aciertos": 2,
+        "desaciertos": 1
     }
 ]
