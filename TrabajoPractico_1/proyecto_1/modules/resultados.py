@@ -27,21 +27,24 @@ class GestorResultados:
             return []
 
     def guardar_resultado(self, usuario, aciertos, total):
-        desaciertos=total-aciertos
-        nuevo = {
-            "usuario": usuario,
-            "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "aciertos":aciertos,
-            "desaciertos" : desaciertos ,
-            "total":total,
-            "resultado": f"{aciertos}/{total}"  
-             
-        }
-        
-        self.datos.append(nuevo)
-        with open(self.ruta_archivo, 'w') as f:
-            json.dump(self.datos, f, indent=4)
-        
+        """Guarda un nuevo resultado en el archivo"""
+        try:
+            nuevo = {
+                "usuario": usuario,
+                "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "aciertos": aciertos,
+                "desaciertos": total - aciertos,
+                "total": total,
+                "resultado": f"{aciertos}/{total}"
+            }
+            
+            self.datos.append(nuevo)
+            with open(self.ruta_archivo, 'w', encoding='utf-8') as f:
+                json.dump(self.datos, f, indent=4)
+    
+        except Exception as e:
+            print(f"Error guardando resultado: {e}")
+
     def _preparar_historial(self):
         """Prepara los datos en el formato que necesitan tus funciones"""
         historial = []
@@ -62,7 +65,7 @@ class GestorResultados:
 
         try:
             # Generar nombres únicos para los archivos
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             nombre_png = f"grafica_circular_{timestamp}.png"
             nombre_pdf = f"grafica_circular_{timestamp}.pdf"
             
@@ -84,7 +87,7 @@ class GestorResultados:
             return None
 
         try:
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             nombre_png = f"grafica_evolucion_{timestamp}.png"
             nombre_pdf = f"grafica_evolucion_{timestamp}.pdf"
             

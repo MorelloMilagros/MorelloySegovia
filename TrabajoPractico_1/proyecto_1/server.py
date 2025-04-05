@@ -102,6 +102,6 @@ def mostrar_graficas():
     grafica_circular = gestor_resultados.generar_grafica_circular()
     grafica_lineal = gestor_resultados.generar_grafica_evolucion()
 
-    return render_template("graficas.html",grafica_circular=grafica_circular, grafica_lineal=grafica_lineal,resultados=gestor_resultados.datos[-10:])
+    return render_template("graficas.html",grafica_circular=grafica_circular, grafica_lineal=grafica_lineal)
 if __name__ == '__main__':
     app.run(debug=True)

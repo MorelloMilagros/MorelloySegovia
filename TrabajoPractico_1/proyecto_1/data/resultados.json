@@ -1,16 +1,41 @@
 [
     {
-        "usuario": "asda",
-        "fecha": "04-04-25 23:18:18",
-        "resultado": "3/3",
-        "aciertos": 3,
-        "desaciertos": 0
+        "usuario": "lucas",
+        "fecha": "2025-04-04 23:46:48",
+        "aciertos": 2,
+        "desaciertos": 1,
+        "total": 3,
+        "resultado": "2/3"
     },
     {
         "usuario": "emi",
-        "fecha": "04-04-25 23:19:19",
-        "resultado": "2/3",
+        "fecha": "2025-04-04 23:47:00",
+        "aciertos": 0,
+        "desaciertos": 3,
+        "total": 3,
+        "resultado": "0/3"
+    },
+    {
+        "usuario": "asda",
+        "fecha": "2025-04-05 00:10:05",
         "aciertos": 2,
-        "desaciertos": 1
+        "desaciertos": 1,
+        "total": 3,
+        "resultado": "2/3"
+    },
+    {
+        "usuario": "asda",
+        "fecha": "2025-04-05 00:31:18",
+        "aciertos": 2,
+        "desaciertos": 1,
+        "total": 3
+    },
+    {
+        "usuario": "kaka",
+        "fecha": "2025-04-05 00:36:08",
+        "aciertos": 2,
+        "desaciertos": 1,
+        "total": 3,
+        "resultado": "2/3"
     }
 ]
