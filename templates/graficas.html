@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráficas de Resultados</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Análisis de Resultados</h1>
+        
+        <!-- Gráfica Circular -->
+        <div class="grafica-container">
+            <h2>Distribución de Aciertos</h2>
+            {% if grafica_circular %}
+            <img src="{{ url_for('static', filename='graficas/' + grafica_circular) }}" 
+                 alt="Gráfica circular de resultados" class="grafica-img">
+    
+            {% else %}
+            <div class="mensaje-error">
+                No se pudo generar la gráfica circular. No hay datos suficientes.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Gráfica de Evolución -->
+        <div class="grafica-container">
+            <h2>Evolución Temporal</h2>
+            {% if grafica_lineal %}
+            <img src="{{ url_for('static', filename='graficas/' + grafica_lineal) }}" 
+                 alt="Gráfica de evolución de resultados" class="grafica-img">
+                 
+            <!-- Botón de descarga corregido -->
+            <div class="button-group">
+                <a href="{{ url_for('descargar_pdf') }}" >
+                        <input type="submit" value="Descargar graficas en pdf" class="button">
+                   </form>
+                </a>
+            </div>
+            
+            {% else %}
+            <div class="mensaje-error">
+                No se pudo generar la gráfica de evolución. No hay datos suficientes.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Tabla de Resultados -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Resultado</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for resultado in resultados %}
+                <tr>
+                    <td>{{ resultado.usuario }}</td>
+                    <td>{{ resultado.resultado }}</td>
+                    <td>{{ resultado.fecha }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3">No hay resultados registrados</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Botones de navegación -->
+        <div class="button-group">
+            <a href="/" class="button">Volver al Inicio</a>
+            <a href="/resultados" class="button">Ver Datos Completos</a>
+        </div>
+    </div>
+</body>
+</html>

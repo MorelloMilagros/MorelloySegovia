@@ -5,11 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+<<<<<<< HEAD
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
             "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}"
+=======
+            "type": "msedge",
+            "request": "launch",
+            "name": "Open inicio.html",
+            "file": "c:\\Users\\lukas\\OneDrive\\Escritorio\\MorelloySegovia\\TrabajoPractico_1\\proyecto_1\\templates\\inicio.html"
+>>>>>>> 8513ce7 (Correcciones finales realizadas)
         }
     ]
 }

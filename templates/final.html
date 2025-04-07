@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resultado Final</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>¡Juego Terminado!</h1>
+        <p>Usuario: {{ usuario }}</p>
+        <p>Aciertos: {{ aciertos }}/{{ total }}</p>
+        <a href="/"><button>Volver al Inicio</button></a>
+    </div>
+</body>
+</html>
