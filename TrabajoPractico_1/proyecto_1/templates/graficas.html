@@ -16,6 +16,7 @@
             {% if grafica_circular %}
             <img src="{{ url_for('static', filename='graficas/' + grafica_circular) }}" 
                  alt="Gráfica circular de resultados" class="grafica-img">
+    
             {% else %}
             <div class="mensaje-error">
                 No se pudo generar la gráfica circular. No hay datos suficientes.
@@ -29,6 +30,15 @@
             {% if grafica_lineal %}
             <img src="{{ url_for('static', filename='graficas/' + grafica_lineal) }}" 
                  alt="Gráfica de evolución de resultados" class="grafica-img">
+                 
+            <!-- Botón de descarga corregido -->
+            <div class="button-group">
+                <a href="{{ url_for('descargar_pdf') }}" >
+                        <input type="submit" value="Descargar graficas en pdf" class="button">
+                   </form>
+                </a>
+            </div>
+            
             {% else %}
             <div class="mensaje-error">
                 No se pudo generar la gráfica de evolución. No hay datos suficientes.
@@ -36,7 +46,7 @@
             {% endif %}
         </div>
 
-        <!-- Tabla de Resultados (opcional) -->
+        <!-- Tabla de Resultados -->
         <table>
             <thead>
                 <tr>

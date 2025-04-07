@@ -3,6 +3,8 @@ from modules.peliculas import GestorPeliculas
 from modules.trivia import Trivia
 from modules.resultados import GestorResultados
 import os
+from flask import send_from_directory
+from PyPDF4 import PdfFileMerger
 
 app = Flask(__name__)
 app.secret_key = 'clave_segura_para_flask_1234567890'
@@ -103,5 +105,41 @@ def mostrar_graficas():
     grafica_lineal = gestor_resultados.generar_grafica_evolucion()
 
     return render_template("graficas.html",grafica_circular=grafica_circular, grafica_lineal=grafica_lineal)
+@app.route ("/peliculas")
+
+def mostrar_peliculas():
+    peliculas= gestor_peliculas.obtener_peliculas_ordenadas()
+    return render_template("peliculas.html",peliculas=peliculas)
+
+@app.route("/descargar")
+def descargar_pdf():
+    try:
+        # 1. Verificar que los archivos existen
+        ruta_grafico1 = os.path.join("static", "Grafico1.pdf")
+        ruta_grafico2 = os.path.join("static", "Graficocircular.pdf")
+        ruta_salida = os.path.join("static", "Graficas.pdf")
+        
+        if not os.path.exists(ruta_grafico1):
+            raise FileNotFoundError("No se encontró Grafico1.pdf")
+            
+        if not os.path.exists(ruta_grafico2):
+            raise FileNotFoundError("No se encontró Graficocircular.pdf")
+
+        # 2. Combinar los PDFs
+        merger = PdfFileMerger()
+        merger.append(ruta_grafico1)
+        merger.append(ruta_grafico2)
+        
+        # 3. Guardar el PDF combinado
+        with open(ruta_salida, "wb") as f:
+            merger.write(f)
+        
+        # 4. Enviar el archivo al usuario
+        return send_file(ruta_salida, as_attachment=True)
+        
+    except Exception as e:
+        return f"Error al generar el PDF: {str(e)}", 500
+
+        
 if __name__ == '__main__':
     app.run(debug=True)

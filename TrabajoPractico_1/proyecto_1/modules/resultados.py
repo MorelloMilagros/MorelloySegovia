@@ -3,6 +3,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import os
 from pathlib import Path
+from flask import send_file
 
 class GestorResultados:
     def __init__(self, ruta_archivo):
@@ -11,12 +12,10 @@ class GestorResultados:
         self._crear_directorios()
 
     def _crear_directorios(self):
-        """Crea los directorios necesarios si no existen"""
         Path('static/graficas').mkdir(parents=True, exist_ok=True)
         Path('static/pdf').mkdir(parents=True, exist_ok=True)
 
     def _cargar_datos(self):
-        """Carga los datos existentes desde el archivo JSON"""
         try:
             if os.path.exists(self.ruta_archivo):
                 with open(self.ruta_archivo, 'r', encoding='utf-8') as f:
@@ -27,7 +26,6 @@ class GestorResultados:
             return []
 
     def guardar_resultado(self, usuario, aciertos, total):
-        """Guarda un nuevo resultado en el archivo"""
         try:
             nuevo = {
                 "usuario": usuario,
@@ -46,25 +44,29 @@ class GestorResultados:
             print(f"Error guardando resultado: {e}")
 
     def _preparar_historial(self):
-        """Prepara los datos en el formato que necesitan tus funciones"""
         historial = []
         for dato in self.datos:
-            historial.append((
-                dato["usuario"],
-                dato["fecha"],
-                dato["aciertos"],
-                dato["desaciertos"]
-            ))
+            try:
+            # Validación completa de campos
+                if all(key in dato for key in ['usuario', 'fecha', 'aciertos', 'desaciertos']):
+                    historial.append((
+                        dato["usuario"],
+                        dato["fecha"],
+                        int(dato["aciertos"]),
+                        int(dato["desaciertos"])
+                    ))
+            except (KeyError, ValueError) as e:
+                print(f"Registro corrupto omitido: {dato}. Error: {str(e)}")
         return historial
 
+    # ========== CORRECCIONES APLICADAS AQUÍ ==========
     def generar_grafica_circular(self):
-        """Versión adaptada de tu grafica_curvas"""
-        historial = self._preparar_historial()
-        if not historial:
-            return None
-
+        """Versión corregida con manejo de errores"""
         try:
-            # Generar nombres únicos para los archivos
+            historial = self._preparar_historial()
+            if not historial:
+                return "grafica_vacia.png"
+            
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             nombre_png = f"grafica_circular_{timestamp}.png"
             nombre_pdf = f"grafica_circular_{timestamp}.pdf"
@@ -72,21 +74,20 @@ class GestorResultados:
             ruta_png = os.path.join('static', 'graficas', nombre_png)
             ruta_pdf = os.path.join('static', 'pdf', nombre_pdf)
 
-            # Llamar a tu función original
             self.grafica_curvas(historial, ruta_png, ruta_pdf)
-            
             return nombre_png
+            
         except Exception as e:
             print(f"Error generando gráfica circular: {e}")
-            return None
+            return "grafica_error.png"
 
     def generar_grafica_evolucion(self):
-        """Versión adaptada de tu grafica_prom"""
-        historial = self._preparar_historial()
-        if not historial:
-            return None
-
+        """Versión corregida con manejo de errores"""
         try:
+            historial = self._preparar_historial()
+            if not historial:
+                return "grafica_vacia.png"
+            
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             nombre_png = f"grafica_evolucion_{timestamp}.png"
             nombre_pdf = f"grafica_evolucion_{timestamp}.pdf"
@@ -94,28 +95,27 @@ class GestorResultados:
             ruta_png = os.path.join('static', 'graficas', nombre_png)
             ruta_pdf = os.path.join('static', 'pdf', nombre_pdf)
 
-            # Llamar a tu función original
             self.grafica_prom(historial, ruta_png, ruta_pdf)
-            
             return nombre_png
+            
         except Exception as e:
             print(f"Error generando gráfica de evolución: {e}")
-            return None
+            return "grafica_error.png"
+    # ========== FIN DE CORRECCIONES ==========
 
-    # Tus funciones originales adaptadas como métodos
     def grafica_curvas(self, historial2, ruta_png, ruta_pdf):
+        # Mantener método original sin cambios
         fechas = []
         total_aciertos = 0
         total_desaciertos = 0
         
         for registro in historial2:
-            fecha_str = registro[1].split(".")[0]  # Eliminar decimales de los segundos
+            fecha_str = registro[1].split(".")[0]
             fecha = datetime.strptime(fecha_str, "%Y-%m-%d %H:%M:%S").date()
             fechas.append(fecha.strftime('%Y-%m-%d'))
             total_aciertos += int(registro[2])
             total_desaciertos += int(registro[3])
 
-        # Crear el gráfico circular
         labels = ['Aciertos', 'Desaciertos']
         sizes = [total_aciertos, total_desaciertos]
         colors = ['lightgreen', 'lightcoral']
@@ -127,16 +127,16 @@ class GestorResultados:
         plt.title('Porcentaje de Aciertos y Desaciertos acumulados')
         plt.axis('equal')
         
-        # Guardar en ambos formatos
         plt.savefig(ruta_pdf)
         plt.savefig(ruta_png)
         plt.close()
 
     def grafica_prom(self, historial2, ruta_png, ruta_pdf):
+        # Mantener método original sin cambios
         totales_por_fecha = {}
         
         for registro in historial2:
-            fecha_str = registro[1].split()[0]  # Extraer solo la parte de la fecha
+            fecha_str = registro[1].split()[0]
             fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
             aciertos2 = int(registro[2])
             desaciertos2 = int(registro[3])
@@ -147,7 +147,6 @@ class GestorResultados:
             else:
                 totales_por_fecha[fecha] = {'aciertos': [aciertos2], 'desaciertos': [desaciertos2]}
 
-        # Calcular promedios
         fechas2 = []
         promedio_aciertos = []
         promedio_desaciertos = []
@@ -157,7 +156,6 @@ class GestorResultados:
             promedio_aciertos.append(sum(totales['aciertos']))
             promedio_desaciertos.append(sum(totales['desaciertos']))
 
-        # Graficar
         plt.figure(figsize=(8, 6))
         plt.plot(fechas2, promedio_aciertos, marker='o', label='Aciertos')
         plt.plot(fechas2, promedio_desaciertos, marker='x', label='Desaciertos')
@@ -169,7 +167,6 @@ class GestorResultados:
         plt.grid(True)
         plt.tight_layout()
         
-        # Guardar en ambos formatos
         plt.savefig(ruta_pdf)
         plt.savefig(ruta_png)
         plt.close()
