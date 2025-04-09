@@ -4,6 +4,7 @@ from modules.trivia import Trivia
 from modules.resultados import GestorResultados
 import os
 from PyPDF4 import PdfFileMerger
+# ... (imports y config inicial)
 
 app = Flask(__name__)
 app.secret_key = 'clave_segura_para_flask_1234567890'
@@ -24,11 +25,11 @@ juego_actual = {
     'frase_actual': None,
     'correcta_actual': None
 }
-
+# Ruta principal: Muestra el formulario de inicio
 @app.route('/')
 def inicio():
     return render_template('inicio.html')
-
+# Procesa el formulario de inicio y crea nueva trivia
 @app.route('/iniciar', methods=['POST'])
 def iniciar_juego():
     usuario = request.form['usuario']
@@ -37,11 +38,11 @@ def iniciar_juego():
     trivia = Trivia(gestor_peliculas)
     trivia.iniciar_juego(usuario, num_frases)
     
-    # Generar primera pregunta
+    # Generar primera pregunta y guarda estado en variable global
     frase, correcta, opciones = trivia.generar_opciones()
     
     # Guardar estado del juego
-    juego_actual['trivia'] = trivia
+    juego_actual['trivia'] = trivia # Persistencia entre requests
     juego_actual['frase_actual'] = frase
     juego_actual['correcta_actual'] = correcta
     juego_actual['opciones_actuales'] = opciones
@@ -52,6 +53,7 @@ def iniciar_juego():
                          aciertos=0,
                          total=num_frases)
 
+# Verifica respuesta y genera nueva pregunta o termina
 @app.route('/verificar', methods=['POST'])
 def verificar_respuesta():
     if not juego_actual['trivia']:
@@ -109,7 +111,7 @@ def mostrar_graficas():
 def mostrar_peliculas():
     peliculas= gestor_peliculas.obtener_peliculas_ordenadas()
     return render_template("peliculas.html",peliculas=peliculas)
-
+# Descarga PDF combinado de gráficas
 @app.route("/descargar")
 def descargar_pdf():
     try:
@@ -124,7 +126,7 @@ def descargar_pdf():
         if not os.path.exists(ruta_grafico2):
             raise FileNotFoundError(f"No se encontró {ruta_grafico2}")
 
-        # 2. Combinar los PDFs
+        # 2. Combinar los PDFs -Usa PyPDF4 para combinar dos PDFs en uno
         merger = PdfFileMerger()
         merger.append(ruta_grafico1)
         merger.append(ruta_grafico2)
@@ -133,11 +135,11 @@ def descargar_pdf():
         with open(ruta_salida, "wb") as f:
             merger.write(f)
         
-        # 4. Enviar el archivo al usuario
+        # 4. Enviar el archivo al usuario como descarga
         return send_file(ruta_salida,as_attachment=True,download_name="ResultadosGraficas.pdf", mimetype='application/pdf' )
         
     except Exception as e:
-        return f"Error al generar el PDF: {str(e)}", 500
+        return f"Error al generar el PDF: {str(e)}", 500 # Manejo básico de errores HTTP
 
         
 if __name__ == '__main__':

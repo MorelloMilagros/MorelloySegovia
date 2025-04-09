@@ -7,12 +7,14 @@
 <body>
     <div class="container">
         <h1>Resultados Históricos</h1>
+         <!-- Tabla para mostrar datos estructurados -->
         <table>
             <tr>
                 <th>Usuario</th>
                 <th>Resultado</th>
                 <th>Fecha</th>
             </tr>
+             <!-- Itera sobre los resultados cargados desde JSON -->
             {% for resultado in resultados %}
             <tr>
                 <td>{{ resultado.usuario }}</td>
@@ -21,6 +23,7 @@
             </tr>
             {% endfor %}
         </table>
+           <!-- Botones de navegación -->
         <a href="/"><button>Volver al Inicio</button></a>
         <a href="/graficas"><button>Ver Gráficas</button></a>
     </div>

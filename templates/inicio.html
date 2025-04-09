@@ -2,16 +2,20 @@
 <html>
 <head>
     <title>Trivia de Películas</title>
+      <!-- Carga el CSS desde la carpeta static -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
         <h1>Trivia de Películas</h1>
-        <form action="/iniciar" method="post">
+        <!-- Formulario POST para iniciar el juego (envía datos al servidor) -->
+        <form action="/iniciar" method="post"> 
+             <!-- Inputs con atributos 'required' para validación del lado del cliente -->
             <input type="text" name="usuario" placeholder="Nombre de usuario" required>
             <input type="number" name="num_frases" min="3" placeholder="Número de frases" required>
             <button type="submit">Iniciar Juego</button>
         </form>
+          <!-- Botones como enlaces a otras rutas -->
         <a href="/peliculas"><button>Ver Películas</button></a>
         <a href="/resultados"><button>Resultados Históricos</button></a>
     </div>

@@ -7,9 +7,11 @@
 <body>
     <div class="container">
         <h1>Películas Disponibles</h1>
+         <!-- Lista no ordenada de películas -->
         <ul>
+                 <!-- Itera sobre la lista pasada desde Flask -->
             {% for pelicula in peliculas %}
-                <li>{{ pelicula }}</li>
+                <li>{{ pelicula }}</li> <!-- Muestra cada película -->
             {% endfor %}
         </ul>
         <a href="/"><button>Volver al Inicio</button></a>

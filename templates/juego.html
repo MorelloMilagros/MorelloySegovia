@@ -6,16 +6,22 @@
 </head>
 <body>
     <div class="container">
+        <!-- Muestra la frase actual (variable pasada desde Flask) -->
         <h2>{{ frase }}</h2>
+        <!-- Formulario para enviar la respuesta seleccionada -->
         <form action="/verificar" method="post">
+               <!-- Formulario para enviar la respuesta seleccionada -->
             <input type="hidden" name="correcta" value="{{ correcta }}">
+             <!-- Genera opciones de respuesta dinámicamente -->
             {% for opcion in opciones %}
                 <label>
-                    <input type="radio" name="respuesta" value="{{ opcion }}" required> {{ opcion }}
+                     <!-- Radio buttons para selección única -->
+                    <input type="radio" name="respuesta" value="{{ opcion }}" required> {{ opcion }} <!-- Muestra el nombre de la película -->
                 </label><br>
             {% endfor %}
             <button type="submit">Continuar</button>
         </form>
+        <!-- Muestra el progreso actual (aciertos/total) -->
         <p>Aciertos: {{ aciertos }}</p>
     </div>
 </body>

@@ -13,7 +13,8 @@
         <!-- Gráfica Circular -->
         <div class="grafica-container">
             <h2>Distribución de Aciertos</h2>
-            {% if grafica_circular %}
+            {% if grafica_circular %} <!-- Verifica si hay gráfica generada -->
+            <!-- Usa url_for para construir la ruta estática -->
             <img src="{{ url_for('static', filename='graficas/' + grafica_circular) }}" 
                  alt="Gráfica circular de resultados" class="grafica-img">
     
@@ -31,7 +32,7 @@
             <img src="{{ url_for('static', filename='graficas/' + grafica_lineal) }}" 
                  alt="Gráfica de evolución de resultados" class="grafica-img">
                  
-            <!-- Botón de descarga corregido -->
+             <!-- Botón para descargar PDF (llama a /descargar) -->
             <div class="button-group">
                 <a href="{{ url_for('descargar_pdf') }}" >
                         <input type="submit" value="Descargar graficas en pdf" class="button">
@@ -62,7 +63,7 @@
                     <td>{{ resultado.resultado }}</td>
                     <td>{{ resultado.fecha }}</td>
                 </tr>
-                {% else %}
+                {% else %} <!-- Jinja2: Si no hay resultados -->
                 <tr>
                     <td colspan="3">No hay resultados registrados</td>
                 </tr>
