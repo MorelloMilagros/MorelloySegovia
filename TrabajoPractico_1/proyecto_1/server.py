@@ -114,6 +114,7 @@ def mostrar_peliculas():
 # Descarga PDF combinado de gráficas
 @app.route("/descargar")
 def descargar_pdf():
+    
     try:
         # 1. Verificar que los archivos existen
         ruta_grafico1 = os.path.join("static","pdf", "Grafico1.pdf")
@@ -128,13 +129,15 @@ def descargar_pdf():
 
         # 2. Combinar los PDFs -Usa PyPDF4 para combinar dos PDFs en uno
         merger = PdfFileMerger()
-        merger.append(ruta_grafico1)
-        merger.append(ruta_grafico2)
+        try:
+            merger.append(ruta_grafico1)
+            merger.append(ruta_grafico2)
         
-        # 3. Guardar el PDF combinado
-        with open(ruta_salida, "wb") as f:
-            merger.write(f)
-        
+            # 3. Guardar el PDF combinado
+            with open(ruta_salida, "wb") as f:
+                merger.write(f)
+        finally:
+            merger.close()
         # 4. Enviar el archivo al usuario como descarga
         return send_file(ruta_salida,as_attachment=True,download_name="ResultadosGraficas.pdf", mimetype='application/pdf' )
         
