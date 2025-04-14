@@ -38,3 +38,11 @@ class Trivia:
             self.aciertos += 1
             return True
         return False
+
+
+if __name__== "__main__":
+    from modules.peliculas import GestorPeliculas
+    RUTA_DATOS = "C:\program_avanzada\MorelloySegovia\TrabajoPractico_1\proyecto_1\modules\data\frases_de_peliculas.txt"
+    g=GestorPeliculas(RUTA_DATOS)
+    t= Trivia(g)
+    print(t.generar_opciones())

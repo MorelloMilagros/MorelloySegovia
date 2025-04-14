@@ -23,8 +23,9 @@ gestor_resultados = GestorResultados(RUTA_RESULTADOS)
 juego_actual = {
     'trivia': None,
     'frase_actual': None,
-    'correcta_actual': None
-}
+    'correcta_actual': None,
+    'opciones_actuales':None
+    }
 # Ruta principal: Muestra el formulario de inicio
 @app.route('/')
 def inicio():
@@ -40,12 +41,18 @@ def iniciar_juego():
     
     # Generar primera pregunta y guarda estado en variable global
     frase, correcta, opciones = trivia.generar_opciones()
+    print("*"*100)
+    print(frase)
+    print(correcta)
+    print(opciones)
+    print("*"*100)
+
     
     # Guardar estado del juego
     juego_actual['trivia'] = trivia # Persistencia entre requests
     juego_actual['frase_actual'] = frase
     juego_actual['correcta_actual'] = correcta
-    juego_actual['opciones_actuales'] = opciones
+    juego_actual['opciones_actuales'] = opciones #Falta definicion en diccionario
     
     return render_template('juego.html',
                          frase=frase,
@@ -105,7 +112,7 @@ def mostrar_graficas():
     grafica_circular = gestor_resultados.generar_grafica_circular()
     grafica_lineal = gestor_resultados.generar_grafica_evolucion()
 
-    return render_template("graficas.html",grafica_circular=grafica_circular, grafica_lineal=grafica_lineal)
+    return render_template("graficas.html",grafica_circular=grafica_circular, grafica_lineal=grafica_lineal, resultados=gestor_resultados.datos)
 @app.route ("/peliculas")
 
 def mostrar_peliculas():
