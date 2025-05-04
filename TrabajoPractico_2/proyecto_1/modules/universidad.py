@@ -3,6 +3,7 @@ class Facultad():
         self.__nombre=nombre
         self.__departamentos=[]
         self.__estudiantes=[]
+        self.__profesores=[]
 
     @property
     def nombre(self):
@@ -13,6 +14,9 @@ class Facultad():
     @property 
     def estudiantes(self):
         return self.__estudiantes
+    @property
+    def profesores(self):
+        return self.__profesores
     
     def agregar_departamento(self,departamento):
         if departamento not in self.__departamentos:
@@ -22,8 +26,11 @@ class Facultad():
     def agregar_estudiante(self, estudiante):
         if estudiante not in self.__estudiantes:
             self.__estudiantes.append(estudiante)
-            estudiante.agregar_facultad(self)
 
+    def agregar_profesor(self, profesor):
+        if profesor not in self.__profesores:
+            self.__profesores.append(profesor)
+            
     def listar_departamentos(self):
         return [depto.nombre for depto in self.__departamentos]
     
@@ -36,7 +43,6 @@ class Facultad():
 
 class Departamento():
     def __init__(self, nombre, facultad):
-        pass
         self.__nombre=nombre
         self.__facultad=facultad
         self.__cursos=[]
@@ -67,12 +73,16 @@ class Departamento():
     @property
     def director(self):
         return self.__director
+    
     @director.setter
     def director(self,profesor):
+        if profesor==self.__director:
+            return
         if self.__director:
-            self.__director.director_de=None
-        self.director=profesor
-        profesor.director_de=self
+            self.__director.__director_de=None
+        self.__director=profesor
+        if profesor:
+            profesor.__director_de=self
 
     def agregar_profesor(self,profesor):
         if profesor not in self.__profesores:
