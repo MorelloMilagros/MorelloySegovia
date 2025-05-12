@@ -1,4 +1,5 @@
 class Facultad():
+    #Representa una facultad. Contiene departamentos, profesores y estudiantes.
     def __init__(self, nombre):
         self.__nombre=nombre
         self.__departamentos=[]
@@ -9,7 +10,7 @@ class Facultad():
     def nombre(self):
         return self.__nombre
     @property
-    def departamentos(self):
+    def departamentos(self): 
         return self.__departamentos
     @property 
     def estudiantes(self):
@@ -19,22 +20,27 @@ class Facultad():
         return self.__profesores
     
     def agregar_departamento(self,departamento):
+        #Agrega un departamento a la facultad
         if departamento not in self.__departamentos:
             self.__departamentos.append(departamento)
             departamento.facultad= self
 
     def agregar_estudiante(self, estudiante):
+        #Agrega un estudiante a la facultad
         if estudiante not in self.__estudiantes:
             self.__estudiantes.append(estudiante)
 
     def agregar_profesor(self, profesor):
+        #Agrega un profesor a la facultad
         if profesor not in self.__profesores:
             self.__profesores.append(profesor)
             
     def listar_departamentos(self):
+        #Devuelve una lista con los departamentos que pertenecen a la facultad
         return [depto.nombre for depto in self.__departamentos]
     
     def listar_estudiantes(self):
+        #Devuelve una lista de estudiantes que pertenecen a la facultad
         return [str(est) for est in self.__estudiantes]
     
     def __str__(self):
@@ -42,6 +48,7 @@ class Facultad():
     
 
 class Departamento():
+    #Representa un departamento. Pertenece a una única facultad, tiene un director, cursos y profesores asociados
     def __init__(self, nombre, facultad):
         self.__nombre=nombre
         self.__facultad=facultad
@@ -76,6 +83,7 @@ class Departamento():
     
     @director.setter
     def director(self,profesor):
+        #Asigna un director al departamento, removiendo a su vez al anterior si es que existe
         if profesor==self.__director:
             return
         if self.__director:
@@ -85,11 +93,13 @@ class Departamento():
             profesor.__director_de=self
 
     def agregar_profesor(self,profesor):
+        #Agrega un profesor al departamento
         if profesor not in self.__profesores:
             self.__profesores.append(profesor)
             profesor.agregar_departamento(self)
     
     def agregar_curso(self,curso):
+        #Agrega un curso al departamento
         if curso not in self.__cursos:
             self.__cursos.append(curso)
     
@@ -103,7 +113,7 @@ class Departamento():
         return f"Departamento de {self.nombre} ({self.facultad.nombre})"
 
 class Curso():
-    pass
+    #Representa un curso. Tiene un nombre, pertenece a un departamento, puede tener un profesor asignado y varios estudiantes inscritos.
     def __init__(self, nombre,departamento, profesor=None):
         self.__nombre=nombre
         self.__profesor=None
@@ -111,8 +121,7 @@ class Curso():
         self.__estudiantes=[]
         departamento.agregar_curso(self)
         self.profesor=profesor
-        pass
-
+        
     @property
     def nombre(self):
         return self.__nombre
@@ -128,6 +137,7 @@ class Curso():
 
     @profesor.setter
     def profesor(self,profesor):
+        #Asigna un profesor al curso y actualiza si es necesario
         if profesor==self.__profesor:
             return
         
@@ -138,6 +148,7 @@ class Curso():
             profesor.agregar_curso(self)
     
     def agregar_estudiante(self, estudiante):
+        #Agrega al estudiante al curso y actualiza al estudiante
         if estudiante not in self.__estudiantes:
             self.__estudiantes.append(estudiante)
             if self not in estudiante.cursos:

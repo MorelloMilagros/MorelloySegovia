@@ -2,21 +2,28 @@ from modules.personas import Estudiante, Profesor
 from modules.universidad import Facultad,Curso,Departamento
 import os
 class SistemaUniversitario():
+    """
+    Clase principal que gestiona el sistema de información universitaria.
+    Permite registrar estudiantes, profesores, departamentos y cursos,
+    así como la inscripción de estudiantes en cursos.
+    """
     def __init__(self):
+        #Inicializa el sistema con una facultad base e intenta cargar datos iniciales de estudiantes y profesores desde archivos .txt.
         self.facultad= Facultad("Facultad de Ciencias")
         self.cargar_datos_iniciales()
 
     def cargar_datos_iniciales(self):
+        #  Carga automáticamente estudiantes y profesores desde archivos de texto. Crea la carpeta 'data' si no existe.
         if not os.path.exists('data'):
             os.makedirs('data')
         try:
-            with open('data/profesor.txt', 'r')as archivo:
+            with open('data/profesores.txt', 'r')as archivo:
                 for linea in archivo:
                     nombre,dni=linea.strip().split(',')
                     self.facultad.agregar_profesor(Profesor(nombre,dni))
 
         except FileNotFoundError:
-            print("Archivo profesor.txt no encontrado")
+            print("Archivo profesores.txt no encontrado")
 
 
         try:
@@ -28,7 +35,7 @@ class SistemaUniversitario():
             print("Archivo estudiantes.txt no encontrado")
 
     def menu(self):
-        pass
+        #Muestra el menú principal del sistema.
         print("##########################################")
         print("#  Sistema de Información Universitaria  #")
         print("##########################################")
@@ -41,6 +48,7 @@ class SistemaUniversitario():
         print("6) Salir")
 
     def ejecutar(self):
+        #Ejecuta el menú de forma iterativa hasta que el usuario elija salir.
         while True:
             self.menu()
             opcion = input("Seleccione una opcion: ")
@@ -62,6 +70,7 @@ class SistemaUniversitario():
                 print("Opcion invalida. Intente nuevamente.")
     
     def inscribir_alumno(self):
+        #Permite registrar un nuevo estudiante desde la consola y lo guarda en el archivo de texto correspondiente (estudiantes.txt).
         print("---Incribir Alumno---")
         nombre=input("Imgrese su nombre completo: ")
         dni=input("Ingrese su DNI: ")
@@ -74,10 +83,11 @@ class SistemaUniversitario():
         self.facultad.agregar_estudiante(estudiante)
 
         with open('data/estudiantes.txt', 'a', encoding='utf-8')as f:
-            f.write(f"\n{nombre},{dni}\n")
+            f.write(f"{nombre},{dni}\n")
         print(f"\n Estudiante {nombre} inscripto/a correctamente en {self.facultad.nombre}")
     
     def contratar_profesor(self):
+        #Permite registrar un nuevo profesor desde consola y lo guarda en el archivo correspondiente (estudiantes.txt).
         print("---Contratacion de profesor---")
         nombre=input("Nombre completo: ")
         dni=input("Ingrese el DNI: ")
@@ -89,11 +99,12 @@ class SistemaUniversitario():
         profesor=Profesor(nombre,dni)
         self.facultad.agregar_profesor(profesor)
 
-        with open('data/profesor.txt', 'a', encoding='utf-8')as f:
-            f.write(f"{nombre} , {dni}\n")
+        with open('data/profesores.txt', 'a', encoding='utf-8')as f:
+            f.write(f"\n{nombre},{dni}")
         print(f"\n profesor {nombre} contratado correctamente")
 
     def crear_departamento(self):
+        #Permite crear un nuevo departamento y asignar a un profesor como director.
         print("---Crear Departamento---")
         if not self.facultad.profesores:
             print("Error: No hay profesores disponibles para asignar a un departamento")
@@ -122,7 +133,8 @@ class SistemaUniversitario():
     
     
     def crear_curso(self):
-        pass
+        #Permite crear un nuevo curso en un departamento existente y asignarle un profesor.
+
         print("----Crear Curso---")
         if not self.facultad.departamentos:
             print("Error: No hay departamentos disponibles")
@@ -162,7 +174,7 @@ class SistemaUniversitario():
             prof_nombre = profesor.nombre if profesor else "None"
             f.write(f"{nombre_curso},{depto_nombre},{prof_nombre}\n")
 
-        print("\n Nuevo curso {nombre_curso} creado correctamente en {departamento.nombre}")
+        print(f"\n Nuevo curso {nombre_curso} creado correctamente en {departamento.nombre}")
         if profesor:
             print(f"Profesor asignado: {profesor.nombre}")
 
@@ -172,7 +184,7 @@ class SistemaUniversitario():
 
 
     def inscribir_en_curso(self):
-        pass
+        #Permite inscribir un estudiante ya existente a un curso disponible.
         print("--- Inscripción a Curso ---")
         if not self.facultad.estudiantes:
             print("Error: No hay estudiantes registrados")

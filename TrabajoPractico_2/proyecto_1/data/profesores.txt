@@ -1,4 +1,4 @@
-Otto Octavius , 7489746131
-Jessica Jones , 4564564823
-Stephen Strange , 1456231641
-John Jonah Jameson Jr, 163187971
+Otto Octavius,7489746131
+Jessica Jones,4564564823
+Stephen Strange,1456231641
+John Jonah Jameson Jr,163187971
