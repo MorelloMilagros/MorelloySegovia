@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Cinta Transportadora de Alimentos</title>
+    <style>
+        /* Estilos CSS básicos integrados para funcionalidad y legibilidad */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f4f7f6; 
+            color: #333;
+            line-height: 1.6;
+        }
+        .container { 
+            max-width: 960px; 
+            margin: 20px auto; 
+            background-color: #ffffff; 
+            padding: 25px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        header h1 { 
+            color: #2c3e50; 
+            text-align: center; 
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+        .cinta-imagen { 
+            display: block; 
+            margin: 0 auto 30px auto; 
+            max-width: 100%;
+            height: auto; 
+            max-height: 300px;
+            border-radius: 6px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        /* Formulario de control */
+        .control-form { 
+            background-color: #eaf2f8; 
+            padding: 20px; 
+            border-radius: 6px; 
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px; /* Espacio entre label, input y botón */
+        }
+        .control-form label { 
+            font-weight: 600; 
+            color: #34495e;
+        }
+        .control-form input[type="number"] { 
+            padding: 10px; 
+            border: 1px solid #bdc3c7; 
+            border-radius: 4px; 
+            width: 80px; 
+            font-size: 1em;
+            text-align: center;
+        }
+        .control-form input[type="submit"] { 
+            padding: 10px 20px; 
+            background-color: #3498db; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 1em;
+            font-weight: 500;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .control-form input[type="submit"]:hover { 
+            background-color: #2980b9; 
+        }
+
+        /* Sección de resultados */
+        .resultados-seccion h2 { 
+            color: #16a085; 
+            border-bottom: 2px solid #1abc9c; 
+            padding-bottom: 10px; 
+            margin-top: 0; /* Ajuste para cuando es el primer elemento */
+            margin-bottom: 20px;
+        }
+        .metricas-contenedor { 
+            display: grid;
+            /* Para dos columnas en pantallas más grandes, y una en pequeñas */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 25px;
+        }
+        .metrica-card { 
+            background-color: #f9f9f9; 
+            padding: 15px; 
+            border-radius: 5px; 
+            border-left: 5px solid #1abc9c; /* Borde decorativo */
+        }
+        .metrica-card h3 { 
+            margin-top: 0; 
+            color: #2c3e50; 
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .metrica-card p { 
+            margin: 6px 0; 
+            font-size: 0.95em; 
+        }
+        .metrica-card strong { 
+            color: #2980b9; 
+            font-weight: 600;
+        }
+
+        /* Estilos para las advertencias */
+        .advertencia-mensaje { 
+            padding: 15px; 
+            margin-top: 20px; 
+            border-radius: 5px; 
+            font-weight: 500;
+            border: 1px solid;
+        }
+        .advertencia-alta { /* Para advertencias reales */
+            background-color: #fff0f0; /* Rojo claro */
+            color: #c0392b;  /* Rojo oscuro */
+            border-color: #e74c3c; 
+        }
+        .advertencia-ok { /* Para mensajes de "todo bien" */
+            background-color: #e6ffed; /* Verde claro */
+            color: #27ae60;  /* Verde oscuro */
+            border-color: #2ecc71;
+        }
+        .advertencia-vacio { /* Para cajón vacío o no procesado */
+             background-color: #fef9e7; /* Amarillo muy claro */
+             color: #f39c12; /* Naranja/amarillo */
+             border-color: #f1c40f;
+        }
+
+        /* Lista de alimentos detallada */
+        .lista-alimentos-detallada {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .lista-alimentos-detallada li {
+            background-color: #ecf0f1;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            border-left: 3px solid #95a5a6;
+        }
+        .placeholder-mensaje {
+            text-align: center;
+            font-style: italic;
+            color: #7f8c8d;
+            padding: 20px;
+            background-color: #f8f9f9;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sistema de Control de Cinta Transportadora</h1>
+        </header>
+        
+        <img src="{{ url_for('static', filename='images/smart-belt.jpg') }}" 
+             alt="Cinta Transportadora Inteligente" class="cinta-imagen">
+
+        <section class="control-form-section">
+            <form class="control-form" action="{{ url_for('iniciar_carga_cajon_action') }}" method="POST">
+                <label for="num_alimentos_input">Alimentos por Cajón (N):</label>
+                <input type="number" id="num_alimentos_input" name="num_alimentos_objetivo_form" 
+                       value="{{ n_actual_form if n_actual_form else 10 }}" min="1" max="100" required>
+                <input type="submit" value="INICIAR CARGA">
+            </form>
+        </section>
+
+        {% if cajon_resultado %}
+            <section class="resultados-seccion">
+                <h2>Resultados del Último Cajón Procesado</h2>
+                
+                <div class="metricas-contenedor">
+                    <div class="metrica-card">
+                        <h3>Información General del Cajón</h3>
+                        <p><strong>Capacidad Máxima (N configurado):</strong> {{ cajon_resultado.capacidad_maxima }}</p>
+                        <p><strong>Alimentos Cargados Válidos:</strong> {{ cajon_resultado.get_num_alimentos() }}</p>
+                        <p><strong>Peso Total del Contenido:</strong> {{ "%.2f"|format(cajon_resultado.peso_total_kg) }} kg</p>
+                    </div>
+
+                    <div class="metrica-card">
+                        <h3>Actividad Acuosa (aw) Promedio Total</h3>
+                        <p>Promedio Total del Cajón: <strong>{{ "%.3f"|format(cajon_resultado.aw_prom_total_cajon) }}</strong></p>
+                    </div>
+
+                    <div class="metrica-card">
+                        <h3>AW Promedio por Tipo de Alimento</h3>
+                        {% for tipo, aw_prom in cajon_resultado.aw_prom_por_tipo.items() %}
+                            <p>{{ tipo }}: <strong>{{ "%.3f"|format(aw_prom) }}</strong></p>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="metrica-card">
+                        <h3>AW Promedio por Alimento Específico</h3>
+                        {% for nombre, aw_prom in cajon_resultado.aw_prom_por_alimento.items() %}
+                            <p>{{ nombre }}: <strong>{{ "%.3f"|format(aw_prom) }}</strong></p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if cajon_resultado.advertencia %}
+                    {% if "¡ADVERTENCIA!" in cajon_resultado.advertencia %}
+                        <div class="advertencia-mensaje advertencia-alta">
+                            <p>{{ cajon_resultado.advertencia }}</p>
+                        </div>
+                    {% elif "vacío" in cajon_resultado.advertencia.lower() or "no procesado" in cajon_resultado.advertencia.lower() %}
+                         <div class="advertencia-mensaje advertencia-vacio">
+                            <p>{{ cajon_resultado.advertencia }}</p>
+                        </div>
+                    {% else %}
+                        <div class="advertencia-mensaje advertencia-ok">
+                            <p>{{ cajon_resultado.advertencia }}</p>
+                        </div>
+                    {% endif %}
+                {% endif %}
+                
+                <div class="metrica-card" style="margin-top: 25px;"> <h3>Contenido Detallado del Cajón ({{ cajon_resultado.get_num_alimentos() }} items)</h3>
+                    {% if cajon_resultado.get_num_alimentos() > 0 %}
+                        <ul class="lista-alimentos-detallada">
+                            {% for alimento_item in cajon_resultado %} {# Itera sobre cajon_resultado.alimentos_en_cajon #}
+                                <li>{{ alimento_item }}</li> {# Usa el __str__ de la clase Alimento #}
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p>El cajón no contiene alimentos válidos.</p>
+                    {% endif %}
+                </div>
+            </section>
+        {% else %}
+            <p class="placeholder-mensaje">
+                Aún no se ha procesado ningún cajón. <br>
+                Por favor, configure el número de alimentos (N) y presione "INICIAR CARGA".
+            </p>
+        {% endif %}
+    </div>
+</body>
+</html>
