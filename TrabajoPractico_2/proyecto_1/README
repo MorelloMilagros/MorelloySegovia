@@ -1,6 +1,6 @@
 # 🐍Sistema Universitario 
 
-Breve descripción del proyecto: Consola interactiva, que permite realizar diversos tramites
+Breve descripción del proyecto: Consola interactiva que simula un sistema de gestion universitario, que permite realizar diversos tramites
 
 
 ---
@@ -9,14 +9,21 @@ Breve descripción del proyecto: Consola interactiva, que permite realizar diver
 Explica brevemente cómo está organizado el código (funciones y/o clases)
 
 El diagrama de relaciones entre clases está disponible en la carpeta [docs](./docs) del proyecto.
+proyecto/
+│── data/                # Archivos de almacenamiento (.txt)
+│── docs/                # Documentación y diagramas UML
+│── modules/             # Clases y lógica del sistema
+│   ├── personas.py      # Clases Estudiante y Profesor
+│   ├── universidad.py   # Clases Facultad, Departamento y Curso
+│── tests/               # Pruebas unitarias
+│── main.py              # Consola interactiva del sistema
+│── README.md            # Documentación general
 
 ---
 ## 📑Dependencias
 
 1. **Python 3.x**
-2. **SQLalchemy** (`pip install sqlalchemy`)
-3. listar dependencias principales
-4. Dependencias listadas en requierements.txt
+
 
 ---
 ## 🚀Cómo Ejecutar el Proyecto

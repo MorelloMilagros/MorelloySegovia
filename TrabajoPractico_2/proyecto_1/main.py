@@ -1,38 +1,98 @@
 from modules.personas import Estudiante, Profesor
 from modules.universidad import Facultad,Curso,Departamento
 import os
+    
 class SistemaUniversitario():
-    """
-    Clase principal que gestiona el sistema de información universitaria.
-    Permite registrar estudiantes, profesores, departamentos y cursos,
-    así como la inscripción de estudiantes en cursos.
-    """
+    """Clase principal que gestiona el sistema de información universitaria."""
+
     def __init__(self):
-        #Inicializa el sistema con una facultad base e intenta cargar datos iniciales de estudiantes y profesores desde archivos .txt.
-        self.facultad= Facultad("Facultad de Ciencias")
+        """Inicializa el sistema con una facultad base e intenta cargar datos iniciales de estudiantes y profesores."""
+        self.facultad = Facultad("Facultad de Ciencias")
         self.cargar_datos_iniciales()
 
+    def cargar_datos(self, archivo, tipo):
+    #Carga datos desde un archivo de texto y los agrega a la facultad.
+        try:
+            with open(archivo, 'r', encoding='utf-8') as f:
+                lineas = f.readlines()
+                if not lineas:
+                    print(f"Advertencia: {archivo} está vacío.")
+                    return
+                
+                for linea in lineas:
+                    datos = linea.strip().split(',')
+
+                    # Validaciones generales
+                    if tipo in ["profesor", "estudiante"] and len(datos) != 2:
+                        print(f"Advertencia: Línea incorrecta en {archivo}, ignorando: {linea.strip()}")
+                        continue
+                    
+                    if tipo == "profesor":
+                        nombre, dni = datos
+                        if dni.isdigit():
+                            self.facultad.agregar_profesor(Profesor(nombre, dni))
+                        else:
+                            print(f"Advertencia: DNI inválido en {archivo} ({dni}), ignorando entrada.")
+
+                    elif tipo == "estudiante":
+                        nombre, dni = datos
+                        if dni.isdigit():
+                            self.facultad.agregar_estudiante(Estudiante(nombre, dni))
+                        else:
+                            print(f"Advertencia: DNI inválido en {archivo} ({dni}), ignorando entrada.")
+
+                    elif tipo == "departamento":
+                        if len(datos) != 3:
+                            print(f" Advertencia: Línea incorrecta en {archivo}, ignorando: {linea.strip()}")
+                            continue
+
+                        nombre_depto, nombre_facultad, director_dni = datos
+                        
+                        # 🔹 Crear departamento solo si no existe en la lista
+                        departamento_existente = next((d for d in self.facultad.departamentos if d.nombre == nombre_depto), None)
+                        
+                        if departamento_existente:
+                            print(f" Departamento '{nombre_depto}' ya cargado, evitando duplicado.")
+                        else:
+                            nuevo_depto = Departamento(nombre_depto, self.facultad)
+                            self.facultad.departamentos.append(nuevo_depto)
+                            print(f" Departamento '{nombre_depto}' agregado correctamente.")
+
+                            # Asignar director si existe
+                            if director_dni != "None":
+                                profesor = next((prof for prof in self.facultad.profesores if prof.dni == director_dni), None)
+                                if profesor:
+                                    nuevo_depto.director = profesor
+
+
+                    elif tipo == "curso":
+                        if len(datos) != 3:
+                            continue
+                        nombre_curso, nombre_departamento, profesor_dni = datos
+                        departamento = next((d for d in self.facultad.departamentos if d.nombre == nombre_departamento), None)
+                        profesor = next((p for p in self.facultad.profesores if p.dni == profesor_dni), None) if profesor_dni != "None" else None
+
+                        if departamento:
+                            Curso(nombre_curso, departamento, profesor)
+
+        except FileNotFoundError:
+            print(f"Error: Archivo {archivo} no encontrado.")
+
     def cargar_datos_iniciales(self):
-        #  Carga automáticamente estudiantes y profesores desde archivos de texto. Crea la carpeta 'data' si no existe.
+    #Carga automáticamente estudiantes, profesores, departamentos y cursos desde archivos.
         if not os.path.exists('data'):
             os.makedirs('data')
-        try:
-            with open('data/profesores.txt', 'r')as archivo:
-                for linea in archivo:
-                    nombre,dni=linea.strip().split(',')
-                    self.facultad.agregar_profesor(Profesor(nombre,dni))
 
-        except FileNotFoundError:
-            print("Archivo profesores.txt no encontrado")
+        archivos = [
+            ("data/profesores.txt", "profesor"),
+            ("data/estudiantes.txt", "estudiante"),
+            ("data/departamentos.txt", "departamento"),
+            ("data/cursos.txt", "curso")
+        ]
 
+        for archivo, tipo in archivos:
+            self.cargar_datos(archivo, tipo)
 
-        try:
-            with open('data/estudiantes.txt', 'r')as archivo:
-                for linea in archivo:
-                    nombre,dni=linea.strip().split(',')
-                    self.facultad.agregar_estudiante(Estudiante(nombre,dni))
-        except FileNotFoundError:
-            print("Archivo estudiantes.txt no encontrado")
 
     def menu(self):
         #Muestra el menú principal del sistema.
@@ -72,9 +132,16 @@ class SistemaUniversitario():
     def inscribir_alumno(self):
         #Permite registrar un nuevo estudiante desde la consola y lo guarda en el archivo de texto correspondiente (estudiantes.txt).
         print("---Incribir Alumno---")
-        nombre=input("Imgrese su nombre completo: ")
-        dni=input("Ingrese su DNI: ")
-
+        nombre=input("Ingrese su nombre completo: ").strip()
+        #Validar que haya nombre
+        while not nombre:
+            print("ERROR: El nombre no puede estar vacío.")
+            nombre = input("Ingrese su nombre completo: ").strip()
+        dni=input("Ingrese su DNI: ").strip()
+        #Validar que el dni consista en numeros
+        while not dni.isdigit():
+            print("ERROR: El DNI debe contener solo números.")
+            dni = input("Ingrese su DNI: ").strip()
         if any(i.dni== dni for i in self.facultad.estudiantes):
             print("ERROR!. Ya existe un estudiante con ese DNI")
             return 
@@ -83,15 +150,24 @@ class SistemaUniversitario():
         self.facultad.agregar_estudiante(estudiante)
 
         with open('data/estudiantes.txt', 'a', encoding='utf-8')as f:
-            f.write(f"{nombre},{dni}\n")
+            f.write(f"\n{nombre},{dni}")
         print(f"\n Estudiante {nombre} inscripto/a correctamente en {self.facultad.nombre}")
-    
+
+        print(f"\nLista de estudiantes actuales:")
+        for e in self.facultad.estudiantes:
+            print(f"- {e.nombre}, {e.dni} ")
+
     def contratar_profesor(self):
         #Permite registrar un nuevo profesor desde consola y lo guarda en el archivo correspondiente (estudiantes.txt).
         print("---Contratacion de profesor---")
-        nombre=input("Nombre completo: ")
-        dni=input("Ingrese el DNI: ")
-
+        nombre=input("Nombre completo: ").strip()
+        while not nombre:
+            print("ERROR: El nombre no puede estar vacío.")
+            nombre = input("Nombre completo: ").strip()
+        dni=input("Ingrese el DNI: ").strip()
+        while not dni.isdigit():
+            print("ERROR: El DNI debe contener solo números.")
+            dni = input("Ingrese su DNI: ").strip()
         if any(p.dni== dni for p in self.facultad.profesores):
             print("Error: Ya existe un profesor con ese DNI")
             return  
@@ -102,36 +178,48 @@ class SistemaUniversitario():
         with open('data/profesores.txt', 'a', encoding='utf-8')as f:
             f.write(f"\n{nombre},{dni}")
         print(f"\n profesor {nombre} contratado correctamente")
+        print("\nLista de profesores actuales:")
+        for p in self.facultad.profesores:
+            print(f"- {p.nombre} ({p.dni})")
 
-    def crear_departamento(self):
-        #Permite crear un nuevo departamento y asignar a un profesor como director.
+    def crear_departamento(self): 
+        #Permite crear un departamento y asignar un director correctamente.
         print("---Crear Departamento---")
         if not self.facultad.profesores:
             print("Error: No hay profesores disponibles para asignar a un departamento")
             return
-        nombre= input("Nombre del departamento: ")
+
+        nombre = input("Nombre del departamento: ")
 
         print("Profesores disponibles: ")
-        for i, profesor in enumerate(self.facultad.profesores,1):
+        for i, profesor in enumerate(self.facultad.profesores, 1):
             print(f"{i}. {profesor.nombre}")
 
         try:
-            opcion=int(input("Seleccione el director (numero): "))-1
-            director=self.facultad.profesores[opcion]
+            opcion = int(input("Seleccione el director (número): ")) - 1
+            director = self.facultad.profesores[opcion]
         except (ValueError, IndexError):
-            print("Seleccion noo válida")
+            print("Selección no válida")
             return 
-        
-        nuevo_depto= Departamento(nombre, self.facultad)
-        nuevo_depto.director=director
 
-        print(f"\n Departamento '{nombre}' creado exitosamente.")
-        print(f"Director asignado: {director.nombre}")
-        print("\n Departamentos actuales:")
+        nuevo_depto = Departamento(nombre, self.facultad)
+        if any(depto.director == director for depto in self.facultad.departamentos):
+            print(f"Error: {director.nombre} ya es director de otro departamento.")
+            print(f"Departamento '{nombre}' se ha creado correctamente, pero sin director.")
+        else:
+            nuevo_depto.agregar_profesor(director)  # Asegurar que el director pertenezca al departamento
+            nuevo_depto.director = director  # Asignar director si la restricción lo permite
+            print(f"Departamento '{nombre}' creado exitosamente con director: {director.nombre}")
+        # Guardar en 'data/departamentos.txt'
+        with open('data/departamentos.txt', 'a', encoding='utf-8') as f:
+            director_dni = nuevo_depto.director.dni if nuevo_depto.director else "None"
+            f.write(f"{nuevo_depto.nombre},{nuevo_depto.facultad.nombre},{director_dni}\n")
+
+        print("\nDepartamentos actuales:")
         for depto in self.facultad.departamentos:
-            print(f"- {depto.nombre} (Director: {depto.director.nombre if depto.director else 'Sin director'})")
-    
-    
+            director_actual = depto.director.nombre if depto.director else "Sin director"
+            print(f"- {depto.nombre} (Director: {director_actual})")
+            
     def crear_curso(self):
         #Permite crear un nuevo curso en un departamento existente y asignarle un profesor.
 
@@ -182,7 +270,6 @@ class SistemaUniversitario():
         for curso in departamento.cursos:
             print(f"- {curso.nombre} ({curso.profesor.nombre if curso.profesor else 'Sin profesor'})")
 
-
     def inscribir_en_curso(self):
         #Permite inscribir un estudiante ya existente a un curso disponible.
         print("--- Inscripción a Curso ---")
@@ -226,7 +313,10 @@ class SistemaUniversitario():
         
         curso.agregar_estudiante(estudiante)
         print(f"\n {estudiante.nombre} inscrito exitosamente en {curso.nombre}")
-    
+        print("\nLista de estudiantes en el curso:")
+        for est in curso.estudiantes:
+            print(f"- {est.nombre} ({est.dni})")
+
 if __name__ == "__main__":
     sistema = SistemaUniversitario()
     sistema.ejecutar()

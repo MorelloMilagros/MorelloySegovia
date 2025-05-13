@@ -84,13 +84,10 @@ class Departamento():
     @director.setter
     def director(self,profesor):
         #Asigna un director al departamento, removiendo a su vez al anterior si es que existe
-        if profesor==self.__director:
-            return
         if self.__director:
             self.__director.__director_de=None
         self.__director=profesor
-        if profesor:
-            profesor.__director_de=self
+        profesor.__director_de=self
 
     def agregar_profesor(self,profesor):
         #Agrega un profesor al departamento
