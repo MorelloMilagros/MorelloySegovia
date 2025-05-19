@@ -45,25 +45,22 @@ class SistemaUniversitario():
                         if len(datos) != 3:
                             print(f" Advertencia: Línea incorrecta en {archivo}, ignorando: {linea.strip()}")
                             continue
-
                         nombre_depto, nombre_facultad, director_dni = datos
-                        
-                        # 🔹 Crear departamento solo si no existe en la lista
+                        #  Buscar si el departamento ya existe por nombre
                         departamento_existente = next((d for d in self.facultad.departamentos if d.nombre == nombre_depto), None)
                         
                         if departamento_existente:
-                            print(f" Departamento '{nombre_depto}' ya cargado, evitando duplicado.")
-                        else:
-                            nuevo_depto = Departamento(nombre_depto, self.facultad)
-                            self.facultad.departamentos.append(nuevo_depto)
-                            print(f" Departamento '{nombre_depto}' agregado correctamente.")
+                            print(f" Departamento '{nombre_depto}' ya estaba en memoria. No se duplica.")
+                            continue  # Evitar agregarlo nuevamente
 
-                            # Asignar director si existe
-                            if director_dni != "None":
-                                profesor = next((prof for prof in self.facultad.profesores if prof.dni == director_dni), None)
-                                if profesor:
-                                    nuevo_depto.director = profesor
+                        nuevo_depto = Departamento(nombre_depto, self.facultad)
+                        print(f" Departamento '{nombre_depto}' agregado correctamente.")
 
+                        # Asignar director si existe
+                        if director_dni != "None":
+                            profesor = next((prof for prof in self.facultad.profesores if prof.dni == director_dni), None)
+                            if profesor:
+                                nuevo_depto.director = profesor
 
                     elif tipo == "curso":
                         if len(datos) != 3:
@@ -74,6 +71,18 @@ class SistemaUniversitario():
 
                         if departamento:
                             Curso(nombre_curso, departamento, profesor)
+                    elif tipo == "inscripcion":
+                        if len(datos) != 3:
+                            print(f"⚠️ Línea incorrecta en {archivo}, ignorando: {linea.strip()}")
+                            continue
+
+                        dni_estudiante, nombre_curso, nombre_departamento = datos
+                        estudiante = next((e for e in self.facultad.estudiantes if e.dni == dni_estudiante), None)
+                        curso = next((c for d in self.facultad.departamentos if d.nombre == nombre_departamento for c in d.cursos if c.nombre == nombre_curso), None)
+
+                        if estudiante and curso:
+                            curso.agregar_estudiante(estudiante)
+                            print(f"✅ Inscripción restaurada: {estudiante.nombre} en {curso.nombre}")
 
         except FileNotFoundError:
             print(f"Error: Archivo {archivo} no encontrado.")
@@ -87,12 +96,12 @@ class SistemaUniversitario():
             ("data/profesores.txt", "profesor"),
             ("data/estudiantes.txt", "estudiante"),
             ("data/departamentos.txt", "departamento"),
-            ("data/cursos.txt", "curso")
+            ("data/cursos.txt", "curso"),
+            ("data/inscripciones.txt", "inscripcion")
         ]
 
         for archivo, tipo in archivos:
             self.cargar_datos(archivo, tipo)
-
 
     def menu(self):
         #Muestra el menú principal del sistema.
@@ -190,7 +199,9 @@ class SistemaUniversitario():
             return
 
         nombre = input("Nombre del departamento: ")
-
+        if any(d.nombre == nuevo_depto.nombre for d in self.facultad.departamentos):
+            print(f"Advertencia: Departamento '{nuevo_depto.nombre}' ya existe.")
+            return
         print("Profesores disponibles: ")
         for i, profesor in enumerate(self.facultad.profesores, 1):
             print(f"{i}. {profesor.nombre}")
@@ -238,6 +249,9 @@ class SistemaUniversitario():
             print("Seleccion no valida")
             return
         nombre_curso= input("Nombre del curso: ")
+        if any(curso.nombre == nombre_curso for curso in departamento.cursos):
+            print("Ya existe un curso con ese nombre en este departamento.")
+            return
         print("\n Profesores disponibles:")
         profesores_depto=departamento.profesores
         if not profesores_depto:
@@ -259,8 +273,9 @@ class SistemaUniversitario():
 
         with open('data/cursos.txt', 'a', encoding='utf-8') as f:
             depto_nombre = departamento.nombre
-            prof_nombre = profesor.nombre if profesor else "None"
-            f.write(f"{nombre_curso},{depto_nombre},{prof_nombre}\n")
+            #prof_nombre = profesor.nombre if profesor else "None"
+            prof_dni = profesor.dni if profesor else "None"
+            f.write(f"{nombre_curso},{depto_nombre},{prof_dni}\n")
 
         print(f"\n Nuevo curso {nombre_curso} creado correctamente en {departamento.nombre}")
         if profesor:
@@ -312,6 +327,8 @@ class SistemaUniversitario():
             return
         
         curso.agregar_estudiante(estudiante)
+        with open('data/inscripciones.txt', 'a', encoding='utf-8') as f:
+            f.write(f"{estudiante.dni},{curso.nombre},{curso.departamento.nombre}\n")
         print(f"\n {estudiante.nombre} inscrito exitosamente en {curso.nombre}")
         print("\nLista de estudiantes en el curso:")
         for est in curso.estudiantes:
