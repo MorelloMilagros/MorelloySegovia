@@ -73,7 +73,7 @@ class SistemaUniversitario():
                             Curso(nombre_curso, departamento, profesor)
                     elif tipo == "inscripcion":
                         if len(datos) != 3:
-                            print(f"⚠️ Línea incorrecta en {archivo}, ignorando: {linea.strip()}")
+                            print(f" Línea incorrecta en {archivo}, ignorando: {linea.strip()}")
                             continue
 
                         dni_estudiante, nombre_curso, nombre_departamento = datos
@@ -82,7 +82,7 @@ class SistemaUniversitario():
 
                         if estudiante and curso:
                             curso.agregar_estudiante(estudiante)
-                            print(f"✅ Inscripción restaurada: {estudiante.nombre} en {curso.nombre}")
+                            print(f" Inscripción restaurada: {estudiante.nombre} en {curso.nombre}")
 
         except FileNotFoundError:
             print(f"Error: Archivo {archivo} no encontrado.")
