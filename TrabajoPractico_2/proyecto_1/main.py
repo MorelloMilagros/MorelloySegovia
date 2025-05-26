@@ -63,17 +63,21 @@ class SistemaUniversitario():
                                 nuevo_depto.director = profesor
 
                     elif tipo == "curso":
-                        if len(datos) != 3:
+                        if len(datos) != 2:
                             continue
-                        nombre_curso, nombre_departamento, profesor_dni = datos
+                        nombre_curso, nombre_departamento, *profesores_dni = datos
                         departamento = next((d for d in self.facultad.departamentos if d.nombre == nombre_departamento), None)
-                        profesor = next((p for p in self.facultad.profesores if p.dni == profesor_dni), None) if profesor_dni != "None" else None
-
+                    
                         if departamento:
-                            Curso(nombre_curso, departamento, profesor)
+                            curso=Curso(nombre_curso, departamento)
+                            for dni in profesores_dni:
+                                profesor = next((prof for prof in self.facultad.profesores if prof.dni == director_dni), None)
+                                if profesor:
+                                    curso.agregar_profesor(profesor)
+                                
                     elif tipo == "inscripcion":
                         if len(datos) != 3:
-                            print(f" Línea incorrecta en {archivo}, ignorando: {linea.strip()}")
+                            print(f"Línea incorrecta en {archivo}, ignorando: {linea.strip()}")
                             continue
 
                         dni_estudiante, nombre_curso, nombre_departamento = datos
@@ -82,7 +86,7 @@ class SistemaUniversitario():
 
                         if estudiante and curso:
                             curso.agregar_estudiante(estudiante)
-                            print(f" Inscripción restaurada: {estudiante.nombre} en {curso.nombre}")
+                            print(f"Inscripción restaurada: {estudiante.nombre} en {curso.nombre}")
 
         except FileNotFoundError:
             print(f"Error: Archivo {archivo} no encontrado.")
@@ -274,8 +278,8 @@ class SistemaUniversitario():
         with open('data/cursos.txt', 'a', encoding='utf-8') as f:
             depto_nombre = departamento.nombre
             #prof_nombre = profesor.nombre if profesor else "None"
-            prof_dni = profesor.dni if profesor else "None"
-            f.write(f"{nombre_curso},{depto_nombre},{prof_dni}\n")
+            prof_dnis = ",".join([p.dni for p in nuevo_curso.profesores]) if nuevo_curso.profesores else "None"
+            f.write(f"{nombre_curso},{depto_nombre},{prof_dnis}\n")
 
         print(f"\n Nuevo curso {nombre_curso} creado correctamente en {departamento.nombre}")
         if profesor:

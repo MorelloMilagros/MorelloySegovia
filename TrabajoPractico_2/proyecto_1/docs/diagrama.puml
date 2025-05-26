@@ -1,0 +1,81 @@
+@startuml name
+class SistemaUniversitario {
+  - facultad: Facultad
+  + cargar_datos()
+  + cargar_datos_iniciales()
+  + menu()
+  + ejecutar()
+  + inscribir_alumnos()
+  + contratar_profesor()
+  + crear_departamento()
+  + crear_curso()
+  + inscribir_en_curso()
+}
+
+class Facultad {
+  <> - nombre: str
+  <> - departamentos: list[Departamento]
+  <> - estudiantes: list[Estudiante]
+  <> - profesores: list[Profesor]
+  + agregar_estudiante(estudiante: Estudiante)
+  + agregar_profesor(profesor: Profesor)
+  + agregar_departamento(depto: Departamento)
+  + listar_departamentos(): list[str]
+  + listar_estudiantes(): list[str]
+}
+
+class Departamento {
+  <> - nombre: str
+  - facultad: Facultad
+  <> - cursos: list[Curso]
+  <> - profesores: list[Profesor]
+  <<get/set>> - director: Profesor
+  + agregar_profesor(profesor: Profesor)
+  + agregar_curso(curso: Curso)
+  + listar_profesores(): list[str]
+  + listar_cursos(): list[str]
+}
+
+class Curso {
+  <> - nombre: str
+  - departamento: Departamento
+  <> - profesores: list[Profesor]
+  <> - estudiantes: list[Estudiante]
+  + agregar_profesor(profesor: Profesor)
+  + agregar_estudiante(estudiante: Estudiante)
+  + listar_estudiantes(): list[str]
+}
+
+class Estudiante {
+  <> - nombre: str
+  <> - dni: str
+  <> - cursos: list[Curso]
+  + inscribir_curso(curso: Curso)
+}
+
+class Profesor {
+  <> - nombre: str
+  <> - dni: str
+  <> - departamentos: list[Departamento]
+  <<get/set>> - curso_donde_dicta: Curso
+  <<get/set>> - director_de: Departamento
+  + agregar_departamento(depto: Departamento)
+}
+
+class Persona {
+  <<get/set>> - nombre: str
+  <<get/set>> - dni: str
+}
+
+SistemaUniversitario --> Facultad
+Facultad "1..*" o-- "0..*" Estudiante
+Facultad "1..*" o-- "0..*" Profesor
+Facultad "1..*" o-- "0..*" Departamento
+Departamento "1..*" o-- "0..*" Curso
+Curso "0..*" o-- "0..*" Estudiante : Asiste a
+Curso "0..*" o-- "0..*" Profesor : Enseña en
+Departamento "1" -- "1" Profesor : Director de
+Profesor "1..*" -- "1" Curso : asignado a
+Persona <|-- Estudiante
+Persona <|-- Profesor
+@enduml

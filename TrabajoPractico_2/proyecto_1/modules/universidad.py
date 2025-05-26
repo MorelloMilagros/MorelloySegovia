@@ -1,4 +1,4 @@
-class Facultad():
+class Facultad:
     #Representa una facultad. Contiene departamentos, profesores y estudiantes.
     def __init__(self, nombre):
         self.__nombre=nombre
@@ -47,7 +47,7 @@ class Facultad():
         return f"Facultad de {self.nombre}"
     
 
-class Departamento():
+class Departamento:
     #Representa un departamento. Pertenece a una única facultad, tiene un director, cursos y profesores asociados
     def __init__(self, nombre, facultad):
         self.__nombre=nombre
@@ -109,22 +109,21 @@ class Departamento():
     def __str__(self):
         return f"Departamento de {self.nombre} ({self.facultad.nombre})"
 
-class Curso():
+class Curso:
     #Representa un curso. Tiene un nombre, pertenece a un departamento, puede tener un profesor asignado y varios estudiantes inscritos.
-    def __init__(self, nombre,departamento, profesor=None):
+    def __init__(self, nombre,departamento, profesores=None):
         self.__nombre=nombre
-        self.__profesor=None
+        self.__profesores=profesores if profesores is not None else[]
         self.__departamento=departamento
         self.__estudiantes=[]
         departamento.agregar_curso(self)
-        self.profesor=profesor
         
     @property
     def nombre(self):
         return self.__nombre
     @property
-    def profesor(self):
-        return self.__profesor
+    def profesores(self):
+        return self.__profesores
     @property
     def departamento(self):
         return self.__departamento
@@ -132,17 +131,12 @@ class Curso():
     def estudiantes(self):
         return self.__estudiantes
 
-    @profesor.setter
-    def profesor(self,profesor):
-        #Asigna un profesor al curso y actualiza si es necesario
-        if profesor==self.__profesor:
-            return
-        
-        if self.__profesor:
-            self.__profesor.cursos_a_cargo.remove(self)
-        self.__profesor=profesor
-        if profesor:
-            profesor.agregar_curso(self)
+    def agregar_profesor(self,profesor):
+        #Agrega un profesor al curso y actualiza si es necesario
+        if profesor not in self.__profesores:
+            self.__profesores.append(profesor)
+            profesor.curso_donde_dicta=self
+
     
     def agregar_estudiante(self, estudiante):
         #Agrega al estudiante al curso y actualiza al estudiante
