@@ -1,8 +1,5 @@
 # Trabajo Práctico Nº1
 
 Primer trabajo práctico de la asignatura <Programación Avanzada>.
-Este trabajo práctico consta de los siguientes N proyectos:
-  - `Nombre de proyecto 1`
-  - `Nombre de proyecto 2`
-  -  ...
-
+Este trabajo práctico consta de los siguientes 1 proyectos:
+  - `Trivia de Películas`

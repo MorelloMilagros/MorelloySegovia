@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, send_file
 from modules.peliculas import GestorPeliculas
 from modules.trivia import Trivia
 from modules.resultados import GestorResultados
+from modules.pdf import descargar_pdf
 import os
 from PyPDF4 import PdfFileMerger
 # ... (imports y config inicial)
@@ -31,8 +32,12 @@ juego_actual = {
 def inicio():
     return render_template('inicio.html')
 # Procesa el formulario de inicio y crea nueva trivia
+#retorna el render del template "inicio.html"
 @app.route('/iniciar', methods=['POST'])
 def iniciar_juego():
+    #Inicia nueva partida de trivia y genera la primera pregunta
+    """Recibe nombre de  usuario cantidad de preguntas
+    Retorna la renderizacion del template "juego.html" con la primera pregunta"""
     usuario = request.form['usuario']
     num_frases = int(request.form['num_frases'])
     
@@ -63,6 +68,10 @@ def iniciar_juego():
 # Verifica respuesta y genera nueva pregunta o termina
 @app.route('/verificar', methods=['POST'])
 def verificar_respuesta():
+    #Verifica la respuesta del usuario y genera una nueva pregunta o finaliza el juego 
+    """ Analiza si la respuesta es correcta y suma el acierto. Luego genera otra pegunta o finaliza el juego
+    Retorna: template "juego.html" o "final.html"""
+  
     if not juego_actual['trivia']:
         return redirect(url_for('inicio'))
     
@@ -109,6 +118,8 @@ def mostrar_resultados():
 
 @app.route("/graficas")
 def mostrar_graficas():
+    #Muestra las graficas lineal y circular
+    """Retorna el render del template "graficas.html" """
     grafica_circular = gestor_resultados.generar_grafica_circular()
     grafica_lineal = gestor_resultados.generar_grafica_evolucion()
 
@@ -116,41 +127,18 @@ def mostrar_graficas():
 @app.route ("/peliculas")
 
 def mostrar_peliculas():
+    #Muestra la lista de peliculas almacenadas
+    """Retorna el rende dle template "peliculas.html" """
     peliculas= gestor_peliculas.obtener_peliculas_ordenadas()
     return render_template("peliculas.html",peliculas=peliculas)
-# Descarga PDF combinado de gráficas
+
+
 @app.route("/descargar")
-def descargar_pdf():
-    
-    try:
-        # 1. Verificar que los archivos existen
-        ruta_grafico1 = os.path.join("static","pdf", "Grafico1.pdf")
-        ruta_grafico2 = os.path.join("static","pdf", "Graficocircular.pdf")
-        ruta_salida = os.path.join("static","pdf", "Graficas.pdf")
-        
-        if not os.path.exists(ruta_grafico1):
-            raise FileNotFoundError(f"No se encontró {ruta_grafico1}")
-            
-        if not os.path.exists(ruta_grafico2):
-            raise FileNotFoundError(f"No se encontró {ruta_grafico2}")
 
-        # 2. Combinar los PDFs -Usa PyPDF4 para combinar dos PDFs en uno
-        merger = PdfFileMerger()
-        try:
-            merger.append(ruta_grafico1)
-            merger.append(ruta_grafico2)
-        
-            # 3. Guardar el PDF combinado
-            with open(ruta_salida, "wb") as f:
-                merger.write(f)
-        finally:
-            merger.close()
-        # 4. Enviar el archivo al usuario como descarga
-        return send_file(ruta_salida,as_attachment=True,download_name="ResultadosGraficas.pdf", mimetype='application/pdf' )
-        
-    except Exception as e:
-        return f"Error al generar el PDF: {str(e)}", 500 # Manejo básico de errores HTTP
-
+def descargar():
+    # Permite la descarga de un archivo PDF con gráficas
+    """retorna un archivo pdf con las graficas del sistema"""
+    return descargar_pdf()
         
 if __name__ == '__main__':
     app.run(debug=True)

@@ -4,13 +4,20 @@ import random
 # Normaliza rutas para compatibilidad entre SO (Windows/Linux/macOS)
 class GestorPeliculas:
     def __init__(self, ruta_archivo):
+        #Inicializa el gestor de películas con la ruta del archivo de datos.
+        """ Args:
+            ruta_archivo (str): Ruta del archivo que contiene frases y películas.
+        """
         self.ruta_archivo = os.path.normpath(ruta_archivo)  # Normaliza rutas para Windows/Linux
         self.frases = [] # Almacena tuplas (frase, película)
         self.peliculas = set() # Usa un set para evitar duplicados automáticamente
         self._cargado = False  # Bandera para evitar carga múltiple del archivo
 
     def cargar_datos(self):
+        #Carga las frases y películas desde el archivo de datos
         # Validación básica: ¿Existe el archivo?
+        """ Raises:
+            FileNotFoundError: Si el archivo de datos no existe."""
         if not os.path.exists(self.ruta_archivo):
             raise FileNotFoundError(f"Archivo no encontrado: {self.ruta_archivo}")
         
@@ -29,12 +36,22 @@ class GestorPeliculas:
 
 
     def obtener_peliculas_ordenadas(self):
+        #Obtiene la lista ordenada de películas disponibles. Carga datos si es que no lo estan
+        """ Returns:
+            list: Lista de nombres de películas ordenadas alfabéticamente"""
         if not self._cargado: # Carga bajo demanda (lazy loading)
             self.cargar_datos()
                     # Convierte el set a lista ordenada alfabéticamente
         return sorted(self.peliculas)
 
     def obtener_frase_aleatoria(self, excluir=None):
+        #Obtiene una frase aletoria de todas las disponbles, excluye ya usadas.
+        """Args:
+            excluir (list, optional): Lista de frases ya utilizadas (tuplas de frase y película). 
+            Si es None, no excluye ninguna frase
+        
+        Retorna: tuple / None: Una tupla (frase, película) aleatoria, o None si no hay frases disponibles
+        """
         if not self._cargado:
             self.cargar_datos()
         excluir = excluir or [] # Manejo de valor por defecto mutable

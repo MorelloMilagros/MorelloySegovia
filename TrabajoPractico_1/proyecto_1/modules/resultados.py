@@ -11,12 +11,14 @@ class GestorResultados:
         self._crear_directorios() # Asegura que existan carpetas para gráficas
 
     def _crear_directorios(self):
-                # Crea directorios si no existen (evita errores al guardar)
+        # Crea directorios necesarios si no existen (evita errores al guardar)
 
         Path('static/graficas').mkdir(parents=True, exist_ok=True)
         Path('static/pdf').mkdir(parents=True, exist_ok=True)
 
     def _cargar_datos(self):
+        #Carga los resultados almacenados en el archivo JSON
+        "retorna list: lista de diccionarios con los resultados históricos"
         try:
                         # Carga el JSON completo si existe
 
@@ -29,6 +31,13 @@ class GestorResultados:
             return [] # Fallo seguro: evita que toda la app falle
 
     def guardar_resultado(self, usuario, aciertos, total):
+        #Guarda el resultado de una partida en el archivo JSON.
+        """
+        Args:
+            usuario (str): Nombre del usuario.
+            aciertos (int): Número de respuestas correctas.
+            total (int): Número total de preguntas en la partida.
+        """
         try:             # Estructura estandarizada para resultados
 
             nuevo = {
@@ -49,6 +58,8 @@ class GestorResultados:
             print(f"Error guardando resultado: {e}") # Log básico
 
     def _preparar_historial(self):
+        #Prepara el historial de juegos filtrando datos válidos
+        "retorna list: Lista de tuplas con información de partidas válidas (usuario, fecha, aciertos, desaciertos)"
         historial = []
         for dato in self.datos:
             try:
@@ -67,6 +78,7 @@ class GestorResultados:
     # ========== CORRECCIONES APLICADAS AQUÍ ==========
     def generar_grafica_circular(self):
         #Genera gráfica circular y devuelve el nombre del archivo PNG
+        "Retorna str: Nombre del archivo generado, o 'grafica_vacia.png' si no hay datos"
         try:
             historial = self._preparar_historial()
             if not historial:
@@ -91,6 +103,7 @@ class GestorResultados:
     def generar_grafica_evolucion(self):
         #Genera gráfica de evolución y devuelve el nombre del archivo PNG
         # Lógica similar a generar_grafica_circular pero para gráfica de líneas
+        "Retorna Nombre del archivo generado, o None si no hay datos"
         try:
             historial = self._preparar_historial()
             if not historial:
@@ -111,7 +124,12 @@ class GestorResultados:
   
 
     def grafica_curvas(self, historial2, ruta_png, ruta_pdf):
-         # Datos acumulados para gráfica circular
+        # Genera una gráfica circular de aciertos vs desaciertos
+        """ Args:
+            historial2 (list): Lista con el historial de partidas.
+            ruta_png (str): Ruta donde se guardará la imagen PNG.
+            ruta_pdf (str): Ruta donde se guardará la imagen PDF.
+        """
         fechas = []
         total_aciertos = 0
         total_desaciertos = 0
@@ -141,8 +159,11 @@ class GestorResultados:
         plt.close() # Libera memoria de matplotlib
 
     def grafica_prom(self, historial2, ruta_png, ruta_pdf):
-        # Mantener método original sin cambios
-         # Agrupa datos por fecha y suma aciertos/desaciertos
+        # Genera una gráfica de evolución del desempeño del usuario
+        """Args:
+            historial2 (list): Lista con el historial de partidas.
+            ruta_png (str): Ruta donde se guardará la imagen PNG.
+            ruta_pdf (str): Ruta donde se guardará la imagen PDF."""
         totales_por_fecha = {}
         
         for registro in historial2:
