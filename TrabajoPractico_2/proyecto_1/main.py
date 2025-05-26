@@ -203,8 +203,8 @@ class SistemaUniversitario():
             return
 
         nombre = input("Nombre del departamento: ")
-        if any(d.nombre == nuevo_depto.nombre for d in self.facultad.departamentos):
-            print(f"Advertencia: Departamento '{nuevo_depto.nombre}' ya existe.")
+        if any(d.nombre == nombre for d in self.facultad.departamentos):
+            print(f"Advertencia: Departamento '{nombre}' ya existe.")
             return
         print("Profesores disponibles: ")
         for i, profesor in enumerate(self.facultad.profesores, 1):
@@ -218,6 +218,7 @@ class SistemaUniversitario():
             return 
 
         nuevo_depto = Departamento(nombre, self.facultad)
+        self.facultad.agregar_departamento(nuevo_depto)
         if any(depto.director == director for depto in self.facultad.departamentos):
             print(f"Error: {director.nombre} ya es director de otro departamento.")
             print(f"Departamento '{nombre}' se ha creado correctamente, pero sin director.")
