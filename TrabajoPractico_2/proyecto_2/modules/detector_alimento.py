@@ -1,6 +1,8 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+from abc import ABC, abstractmethod
+
 
 class DetectorAlimento:
     """clase que representa un conjunto de sensores de la cinta transportadora

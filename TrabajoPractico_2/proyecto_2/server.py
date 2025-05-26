@@ -1,14 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for
-import os
-import sys
 import random # Para la semilla global
 import numpy as np # Para la semilla global
 from typing import Optional
 
-# --- Configuración del PYTHONPATH ---
-project_root = os.path.abspath(os.path.dirname(__file__))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
 
 # --- Semilla Global para Reproducibilidad (Opcional) ---
 # Si se establece una semilla aquí, afectará al `detector_principal` instanciado abajo,
@@ -22,7 +16,8 @@ if GLOBAL_APP_SEED is not None:
 
 # --- Importaciones de Módulos del Proyecto ---
 from modules.detector_alimento import DetectorAlimento
-from modules.clasificador_alimento import ControlCinta, Cajon
+from modules.control_cinta import ControlCinta
+from modules.cajon import Cajon
 
 # --- Inicialización de la Aplicación Flask ---
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -30,9 +25,9 @@ app = Flask(__name__, template_folder='templates', static_folder='static')
 # --- Instancias Globales ---
 # Detector principal (usará la semilla global si se estableció)
 detector_principal = DetectorAlimento() # El __init__ del profesor no toma 'seed'
-
+                                        # Se crea el detector independientemente
 # Controlador principal de la cinta
-controlador_cinta_principal = ControlCinta(detector_alimentos=detector_principal)
+controlador_cinta_principal = ControlCinta(detector_alimentos=detector_principal) # Se inyecta
 
 # Último N configurado por el usuario (para pre-rellenar el formulario)
 ultimo_N_configurado_usuario: int = 10
@@ -43,8 +38,8 @@ def index_page():
     global ultimo_N_configurado_usuario
     cajon_a_mostrar: Optional[Cajon] = controlador_cinta_principal.get_ultimo_cajon_procesado()
     return render_template('index.html',
-                           cajon_resultado=cajon_a_mostrar,
-                           n_actual_form=ultimo_N_configurado_usuario)
+                         cajon_resultado=cajon_a_mostrar,  # El template accede via propiedades
+                         n_actual_form=ultimo_N_configurado_usuario)
 
 @app.route('/iniciar_carga_cajon', methods=['POST'])
 def iniciar_carga_cajon_action():
