@@ -42,10 +42,10 @@ class SistemaUniversitario():
                             print(f"Advertencia: DNI inválido en {archivo} ({dni}), ignorando entrada.")
 
                     elif tipo == "departamento":
-                        if len(datos) != 3:
+                        if len(datos) < 3:
                             print(f" Advertencia: Línea incorrecta en {archivo}, ignorando: {linea.strip()}")
                             continue
-                        nombre_depto, nombre_facultad, director_dni = datos
+                        nombre_depto, nombre_facultad, director_dni, *profesores_dni = datos
                         #  Buscar si el departamento ya existe por nombre
                         departamento_existente = next((d for d in self.facultad.departamentos if d.nombre == nombre_depto), None)
                         
@@ -54,6 +54,7 @@ class SistemaUniversitario():
                             continue  # Evitar agregarlo nuevamente
 
                         nuevo_depto = Departamento(nombre_depto, self.facultad)
+                        
                         print(f" Departamento '{nombre_depto}' agregado correctamente.")
 
                         # Asignar director si existe
@@ -61,9 +62,17 @@ class SistemaUniversitario():
                             profesor = next((prof for prof in self.facultad.profesores if prof.dni == director_dni), None)
                             if profesor:
                                 nuevo_depto.director = profesor
-
+                                nuevo_depto.agregar_profesor(profesor)
+                        
+                        for dni in profesores_dni:
+                            profesor= next((prof for prof in self.facultad.profesores if prof.dni== dni), None)
+                            if profesor is None:
+                                continue
+                            if profesor not in nuevo_depto.profesores:
+                                nuevo_depto.agregar_profesor(profesor)
+                        
                     elif tipo == "curso":
-                        if len(datos) != 2:
+                        if len(datos) < 2:
                             continue
                         nombre_curso, nombre_departamento, *profesores_dni = datos
                         departamento = next((d for d in self.facultad.departamentos if d.nombre == nombre_departamento), None)
@@ -71,10 +80,10 @@ class SistemaUniversitario():
                         if departamento:
                             curso=Curso(nombre_curso, departamento)
                             for dni in profesores_dni:
-                                profesor = next((prof for prof in self.facultad.profesores if prof.dni == director_dni), None)
+                                profesor = next((prof for prof in self.facultad.profesores if prof.dni == dni), None)
                                 if profesor:
                                     curso.agregar_profesor(profesor)
-                                
+                            departamento.agregar_curso(curso)    
                     elif tipo == "inscripcion":
                         if len(datos) != 3:
                             print(f"Línea incorrecta en {archivo}, ignorando: {linea.strip()}")
@@ -274,7 +283,7 @@ class SistemaUniversitario():
                     profesor=None
             else:
                 profesor=None
-        nuevo_curso= Curso(nombre_curso, departamento, profesor)
+        nuevo_curso= Curso(nombre_curso, departamento, [profesor] if profesor else [])
 
         with open('data/cursos.txt', 'a', encoding='utf-8') as f:
             depto_nombre = departamento.nombre
@@ -288,7 +297,8 @@ class SistemaUniversitario():
 
         print("\n Cursos del departamento:")
         for curso in departamento.cursos:
-            print(f"- {curso.nombre} ({curso.profesor.nombre if curso.profesor else 'Sin profesor'})")
+            profesores_asignados = ", ".join([prof.nombre for prof in curso.profesores]) if curso.profesores else "Sin profesor"
+            print(f"- {curso.nombre} ({profesores_asignados})")
 
     def inscribir_en_curso(self):
         #Permite inscribir un estudiante ya existente a un curso disponible.
