@@ -41,7 +41,7 @@ class DetectorAlimento:
             # Esto podría ocurrir si todos los prob_pesos son cero después del redondeo,
             # o si hay algún negativo (improbable con softmax).
             # Fallback a una selección uniforme de peso si random.choices falla.
-            print(f"ADVERTENCIA: random.choices falló con prob_pesos ({e}). Usando selección uniforme de peso.")
+        
             peso_detectado = random.choice(self.peso_alimentos)
 
         return {"alimento": alimento_detectado, "peso": float(peso_detectado)} # Asegurar que el peso es float
