@@ -1,8 +1,7 @@
-# Trabajo Práctico Nº1
+# Trabajo Práctico Nº3
 
-Primer trabajo práctico de la asignatura <Nombre de la asignatura>.
-Este trabajo práctico consta de los siguientes N proyectos:
-  - `Nombre de proyecto 1`
-  - `Nombre de proyecto 2`
+Tercer trabajo práctico de la asignatura <Programación Avanzada>.
+Este trabajo práctico consta de los siguientes 1 proyectos:
+  - `Sistema de reclamos`
   -  ...
 

@@ -2,12 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplicación Flask</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Sistema de reclamos</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Bienvenido a mi Aplicación Flask</h1>
-    <p>Esta es la página de inicio.</p>
+    <div class="container">
+        <h1>Bienvenido al Sistema de Reclamos</h1>
+        <p>Puedes registrarte, iniciar sesión y administrar tus reclamos desde aquí.</p>
+        <button onclick="window.location.href='/registro'">Registrarse</button>
+        <button onclick="window.location.href='/login'">Iniciar sesión</button>
+        <button onclick="window.location.href='/reclamos'">Ver reclamos</button>
+    </div>
 </body>
 </html>
+
+
