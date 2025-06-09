@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Reclamos</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Reclamos Pendientes</h1>
+
+        <!-- 🔹 Filtro por departamento -->
+        <form method="GET" action="{{ url_for('listar_reclamos') }}" class="filter-form">
+            <label for="departamento">Filtrar por departamento:</label>
+            <select name="departamento" class="form-control">
+                <option value="">Todos</option>  <!-- ✅ Siempre incluye "Todos" -->
+                <option value="Soporte Técnico">Soporte Técnico</option>
+                <option value="Atención al Cliente">Atención al Cliente</option>
+                <option value="Facturación">Facturación</option>
+            </select>
+            <button type="submit" class="btn-filter">Filtrar</button>
+        </form>
+
+        <!-- 🔹 Tabla con reclamos -->
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Departamento</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reclamo in lista_reclamos %}
+                <tr>
+                    <td>{{ reclamo.id }}</td>
+                    <td>{{ reclamo.descripcion }}</td>
+                    <td>{{ reclamo.estado }}</td>
+                    <td>{{ reclamo.fecha_creacion.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ reclamo.departamento }}</td>
+                    <td>
+                        <a href="{{ url_for('editar_reclamo', id=reclamo.id) }}" class="btn-edit">Editar</a>
+                        <a href="{{ url_for('adherirse_reclamo', id=reclamo.id) }}" class="btn-join">Adherirse</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="button-container">
+            <a href="{{ url_for('agregar_reclamo') }}" class="btn-add">Agregar nuevo reclamo</a>
+            <a href="{{ url_for('dashboard') }}" class="btn-back">Volver al Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

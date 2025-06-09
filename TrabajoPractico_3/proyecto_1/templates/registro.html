@@ -2,22 +2,53 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Registro</title>
+    <title>Registro de Usuario</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>Registrar Nuevo Usuario</h1>
-    <form action="/registro" method="POST">
-        <label>Nombre:</label>
-        <input type="text" name="nombre" required><br>
-        
-        <label>Email:</label>
-        <input type="email" name="email" required><br>
-        
-        <label>Contraseña:</label>
-        <input type="password" name="password" required><br>
+    <div class="container">
+        <h2>Registro de Usuario</h2>
 
-        <button type="submit">Registrar</button>
-    </form>
+        <!-- 🔹 Mensajes de error / éxito -->
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+          {% if mensajes %}
+            {% for categoria, mensaje in mensajes %}
+              <div class="alert alert-{{ categoria }}">{{ mensaje }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <label for="nombre">Nombre:</label>
+            {{ form.nombre(class="form-control", placeholder="Tu nombre") }}
+            {% for error in form.nombre.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+
+            <label for="email">Correo Electrónico:</label>
+            {{ form.email(class="form-control", placeholder="Tu email") }}
+            {% for error in form.email.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+
+            <label for="password">Contraseña:</label>
+            {{ form.password(class="form-control", placeholder="Tu contraseña") }}
+            {% for error in form.password.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+
+            <label for="confirmacion">Confirmar Contraseña:</label>
+            {{ form.confirmacion(class="form-control", placeholder="Repite tu contraseña") }}
+            {% for error in form.confirmacion.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+
+            <button type="submit" class="btn btn-primary">Registrar</button>
+        </form>
+
+        <p>¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesión aquí</a></p>
+    </div>
 </body>
 </html>

@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block title %}Reclamos Similares{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Reclamos similares encontrados</h2>
+    <p>Puedes adherirte a uno existente o continuar con la creación del tuyo.</p>
+
+    {% if similares %}
+        <div class="grid-container">
+            {% for reclamo in similares %}
+            <div class="card">
+                <p><strong>ID:</strong> {{ reclamo.id }}</p>
+                <p><strong>Descripción:</strong> {{ reclamo.descripcion }}</p>
+                <p><strong>Estado:</strong> <span class="status {{ reclamo.estado }}">{{ reclamo.estado }}</span></p>
+
+                <form action="{{ url_for('adherirse') }}" method="POST">
+                    <input type="hidden" name="id_reclamo" value="{{ reclamo.id }}">
+                    <button type="submit" class="btn-join">Adherirme a este reclamo</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No se encontraron reclamos similares.</p>
+        <a href="{{ url_for('agregar_reclamo') }}" class="btn-primary">Crear nuevo reclamo</a>
+    {% endif %}
+</div>
+{% endblock %}

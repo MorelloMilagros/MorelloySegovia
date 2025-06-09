@@ -9,7 +9,18 @@ class FlaskLoginUser(UserMixin):
         self.nombre = dicc_usuario["nombre"]
         self.email = dicc_usuario["email"]
         self.password = dicc_usuario["password"]
+        self.rol= dicc_usuario["rol"]
+        self.departamento= dicc_usuario.get("departamento", "sin_departamento")
 
+    def es_jefe(self):
+        return self.rol == "jefe"
+
+    def es_secretario(self):
+        return self.rol == "secretario"
+
+    def es_tecnico(self):
+        return self.rol == "tecnico"
+    
 class GestorDeLogin:
     def __init__(self, gestor_usuarios, login_manager, admin_list):
         self.__gestor_usuarios = gestor_usuarios
@@ -30,6 +41,8 @@ class GestorDeLogin:
 
     def __cargar_usuario_actual(self, id_usuario):
         dicc_usuario = self.__gestor_usuarios.cargar_usuario(id_usuario)
+        if dicc_usuario is None:
+            return None
         return FlaskLoginUser(dicc_usuario)
     
     def login_usuario(self, dicc_usuario):
@@ -58,3 +71,4 @@ class GestorDeLogin:
             return True
         else:
             return False
+        

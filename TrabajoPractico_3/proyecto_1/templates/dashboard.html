@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Administración</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Panel de Administración</h1>
+        <p>Bienvenido, {{ current_user.nombre }} ({{ current_user.rol }})</p>
+
+        <h2>Reclamos del Departamento</h2>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Descripción</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+            </tr>
+            {% for reclamo in lista_reclamos %}
+            <tr>
+                <td>{{ reclamo.id }}</td>
+                <td>{{ reclamo.descripcion }}</td>
+                <td>{{ reclamo.estado }}</td>
+                <td>{{ reclamo.fecha }}</td>
+                <td>
+                    <form action="{{ url_for('actualizar_estado_reclamo', id=reclamo.id) }}" method="POST">
+                        <select name="estado">
+                            <option value="pendiente" {% if reclamo.estado == "pendiente" %} selected {% endif %}>Pendiente</option>
+                            <option value="en proceso" {% if reclamo.estado == "en proceso" %} selected {% endif %}>En Proceso</option>
+                            <option value="resuelto" {% if reclamo.estado == "resuelto" %} selected {% endif %}>Resuelto</option>
+                            <option value="invalido" {% if reclamo.estado == "invalido" %} selected {% endif %}>Inválido</option>
+                        </select>
+                        <button type="submit">Actualizar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <h2>Estadísticas</h2>
+        <p>Reclamos pendientes: {{ stats.pendientes }}</p>
+        <p>Reclamos en proceso: {{ stats.en_proceso }}</p>
+        <p>Reclamos resueltos: {{ stats.resueltos }}</p>
+
+        <h3>Tiempo medio de resolución</h3>
+        <p>Mediana en proceso: {{ stats.mediana_en_proceso if stats.mediana_en_proceso else "No disponible" }}</p>
+        <p>Mediana resueltos: {{ stats.mediana_resueltos if stats.mediana_resueltos else "No disponible" }}</p>
+
+
+        <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+    </div>
+</body>
+</html>

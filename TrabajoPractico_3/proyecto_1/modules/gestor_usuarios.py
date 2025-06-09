@@ -12,7 +12,7 @@ class GestorDeUsuarios:
         pass_encriptada=generate_password_hash(password= password,
                                                method= 'pbkdf2:sha256',
                                                salt_length=8)
-        usuario=Usuario(None,nombre, email, pass_encriptada, rol="usuario")
+        usuario=Usuario(None,nombre, email, pass_encriptada, rol="usuario", p_departamento="sin departamento")
         self.__repo.guardar_registro(usuario)
 
     def autenticar_usuario(self, email, password):
@@ -24,5 +24,16 @@ class GestorDeUsuarios:
         return usuario.to_dict()
     
     def cargar_usuario(self, id_usuario):
-        return self.__repo.obtener_registro_por_filtro("id", id_usuario).to_dict()
+        usuario=self.__repo.obtener_registro_por_filtro("id", id_usuario)
+        if not usuario:
+            return None
+        return usuario.to_dict()
+    
+    def modificar_rol(self, id_usuario, nuevo_rol):
+        usuario= self.__repo.obtener_registro_por_filtro("id", id_usuario)
+        if not usuario:
+            raise ValueError("El usuario no existe")
+        usuario.rol= nuevo_rol
+        self.__repo.modificar_registro(usuario)
+    
     

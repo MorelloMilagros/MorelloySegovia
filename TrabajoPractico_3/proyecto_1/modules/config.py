@@ -4,14 +4,16 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from flask_login import LoginManager
 import datetime
+from modules.modelos import Base
 
 app = Flask("ReclamosAPI")
 app.config['SECRET_KEY']= 'clave_12332141'
 
-URL_BD= 'sqlite:///data/reclamos.db'
+URL_BD= 'sqlite:///data/base_datos.db'
 
 def crear_engine():
     engine= create_engine(URL_BD)
+    Base.metadata.create_all(engine)
     Session= sessionmaker(bind=engine)
     return Session
 
