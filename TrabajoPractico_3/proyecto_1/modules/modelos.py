@@ -12,6 +12,8 @@ class ModeloReclamo(Base):
     fecha_creacion= Column(DateTime, default=datetime.utcnow)
     fecha_resolucion= Column(DateTime, nullable=True)    
     id_usuario= Column(Integer, ForeignKey('usuarios.id')) #Reclamo ligado a usuario
+    foto = Column(String(255), nullable=True)
+
 
     def calcular_tiempo_resolucion(self):
         """"""
@@ -23,10 +25,13 @@ class ModeloReclamo(Base):
 class ModeloUsuario(Base):
     __tablename__= 'usuarios'
     id= Column(Integer, primary_key=True)
-    nombre=Column(String(1000), nullable=False, unique=True)
+    nombre=Column(String(1000), nullable=False, unique=False)
+    apellido=Column(String(1000), nullable=False, unique= False)
+    username=Column(String(100), nullable=False, unique=True)
     email= Column(String(1000), nullable=False, unique=True)
     password= Column(String(1000), nullable=False)
     rol=Column(String, default="usuario")
+    claustro=Column(String(100), nullable=False)
     departamento = Column(String(100), default="sin_departamento")
 
     #Roles

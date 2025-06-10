@@ -7,18 +7,20 @@ class GestorDeReclamos:
         self.__repo=repo
         self.__numero_reclamos= len(self.__repo.obtener_todos_los_registros())
         self.__clasificador=clasificador
+
     @property
     def repo(self):
-        return self.__repo 
+        return self.__repo
 
     @property
     def numero_reclamos(self):
         return self.__numero_reclamos
-    
-    def agregar_nuevo_reclamo(self, descripcion, id_usuario, departamento):
+
+    def agregar_nuevo_reclamo(self, descripcion, id_usuario, departamento, p_foto=None):
         if not departamento:
             raise ValueError("El reclamo debe pertenecer a un departamento")
-        reclamo= Reclamo(None, descripcion, "pendiente", id_usuario, departamento)
+        
+        reclamo= Reclamo(None, descripcion, "pendiente", id_usuario, departamento, p_foto=p_foto)
         self.__repo.guardar_registro(reclamo)
 
     def listar_reclamos(self):
@@ -32,12 +34,24 @@ class GestorDeReclamos:
 
     def listar_reclamos_por_departamento(self, departamento):
         """Devuelve una lista de reclamos filtrados por departamento."""
-        if not departamento:
+        if not departamento or departamento.strip() == "":
             raise ValueError("El departamento no es válido")
+        departamento = departamento.strip().lower()  #Normaliza el valor para evitar diferencias en espacios o mayúsculas
         modelo_reclamos = self.__repo.obtener_todos_los_registros()
-        reclamos_filtrados = [r for r in modelo_reclamos if r.departamento == departamento]
-        
+        reclamos_filtrados = [r for r in modelo_reclamos if r.departamento.strip().lower() == departamento]
+        print(f"Reclamos encontrados para '{departamento}': {len(reclamos_filtrados)}")  #Depuración
         return reclamos_filtrados
+    
+    def listar_reclamos_para_usuarios(self):
+        reclamos = self.__repo.obtener_todos_los_registros()
+        resultado = []
+        for r in reclamos:
+            if r.estado == "pendiente":  # <- Filtrar solo pendientes
+                r_dict = r.to_dict()
+                r_dict["adherentes"] = self.obtener_cantidad_adherentes(r.id)
+                resultado.append(r_dict)
+        return resultado
+
 
     def actualizar_estado_reclamo(self, id_reclamo, nuevo_estado):
         reclamo= self.__repo.obtener_registro_por_filtro("id", id_reclamo)
@@ -46,32 +60,31 @@ class GestorDeReclamos:
             if nuevo_estado== "resuelto":
                 reclamo.fecha_resolucion = datetime.utcnow()
 
-            self.__repo.guardar_registro(reclamo)
+            self.__repo.modificar_registro(reclamo)
         else:
             raise ValueError("El reclamo no existe")
-        
+
     def eliminar_reclamo(self, id_reclamo):
         if self.__repo.obtener_registro_por_filtro("id", id_reclamo):
             self.__repo.eliminar_registro(id_reclamo)
         else:
             raise ValueError("El reclamo no existe")
-        
+
     def adherir_a_reclamo(self, id_usuario, id_reclamo):
         self.__repo.adherir_usuario_a_reclamo(id_usuario,id_reclamo)
 
     def obtener_cantidad_adherentes(self, id_reclamo):
         return self.__repo.contar_adherentes(id_reclamo)
-    
-        
+
     def obtener_departamentos(self):
         """Devuelve una lista de los nombres de los departamentos con reclamos registrados."""
         modelo_reclamos = self.__repo.obtener_todos_los_registros()
-        
-        departamentos = {r.departamento for r in modelo_reclamos if r.departamento}  # 🔹 Usamos un conjunto para evitar duplicados
-        
-        return sorted(departamentos)  # 🔹 Ordenamos los nombres alfabéticamente
 
-        
+        departamentos = {r.departamento for r in modelo_reclamos if r.departamento}  #Usamos un conjunto para evitar duplicados
+
+        return sorted(departamentos)  #Ordenamos los nombres alfabéticamente
+
+
     def obtener_estadisticas(self, departamento):
         """Genera estadisticas de reclamos para un depto especifico"""
         reclamos= self.listar_reclamos_por_departamento(departamento)
@@ -102,14 +115,17 @@ class GestorDeReclamos:
             "mediana en proceso": mediana_en_proceso
         }
     
+    def obtener_reclamo(self, id_reclamo):
+      return self.__repo.obtener_registro_por_filtro("id", id_reclamo)
+
     def clasificar_descripcion(self, descripcion):
         if not self.__clasificador:
             raise ValueError("Clasificador no configurado")
         return self.__clasificador.clasificar([descripcion])[0]
-    
+
     def buscar_similares(self, descripcion):
         categoria=  self.clasificar_descripcion(descripcion)
         todos= self.__repo.obtener_todos_los_registros()
         similares= [r for r in todos if self.clasificar_descripcion(r.descripcion)== categoria]
         return similares
-    
+

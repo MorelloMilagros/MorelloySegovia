@@ -1,9 +1,15 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, SubmitField, TextAreaField, SelectField
 from wtforms.validators import DataRequired, EqualTo, Email, Length
 
 class FormRegistro(FlaskForm):
-    nombre=StringField(label= "Nombre", validators=[DataRequired(), Length(min=2, max=50)])
+    nombre=StringField(label= "Nombre", validators=[DataRequired(), Length(min=2, max=30)])
+    apellido=StringField(label="Apellido", validators=[DataRequired(), Length(min=2, max=30)])
+    username=StringField(label="Nombre de usuario", validators=[DataRequired(), Length(min=3, max=30)])
+    claustro=SelectField("Claustro", choices=[("estudiante","Estudiante"),
+                                              ("docente","Docente"),
+                                              ("pays","PAyS")])
     email= StringField(label='Email', validators=[DataRequired(), Email()])
     password= PasswordField(label='Password', validators=[
         DataRequired(),
@@ -24,5 +30,6 @@ class FormReclamo(FlaskForm):
                                                        ("Soporte técnico","Soporte Técnico"),
                                                        ("Facturación","Facturación")],
                                                        validators=[DataRequired()])
+    foto= FileField("Adjuntar Imagen (opcional)", validators=[FileAllowed(['jpg','png','jpeg'], "Solo imágenes")])
     submit=SubmitField("Enviar Reclamo")
     

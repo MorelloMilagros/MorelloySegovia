@@ -1,6 +1,7 @@
 from modules.repositorio_abstracto import RepositorioAbstracto
 from modules.modelos import ModeloReclamo, ModeloUsuario, Adherencia
 from modules.dominio import Reclamo, Usuario
+from datetime import datetime
 
 class RepositorioReclamosSQLAlchemy(RepositorioAbstracto):
     def __init__(self, session):
@@ -25,6 +26,9 @@ class RepositorioReclamosSQLAlchemy(RepositorioAbstracto):
         if registro:
             registro.descripcion= reclamo_modificado.descripcion
             registro.estado= reclamo_modificado.estado
+            registro.departamento=reclamo_modificado.departamento
+            registro.fecha_resolucion= reclamo_modificado.fecha_resolucion
+            registro.foto=reclamo_modificado.foto
             self.__session.commit()
         else:
             raise ValueError("El reclamo no existe en la base de datos")
@@ -44,7 +48,11 @@ class RepositorioReclamosSQLAlchemy(RepositorioAbstracto):
             id= entidad.id,
             descripcion=entidad.descripcion,
             estado=entidad.estado,
-            id_usuario=entidad.id_usuario
+            id_usuario=entidad.id_usuario,
+            departamento=entidad.departamento,
+            fecha_creacion=entidad.fecha_creacion or datetime.utcnow(),
+            foto=entidad.foto,
+            fecha_resolucion=entidad.fecha_resolucion
             )
     
     def __map_modelo_a_entidad(self, modelo: ModeloReclamo):
@@ -52,7 +60,11 @@ class RepositorioReclamosSQLAlchemy(RepositorioAbstracto):
             modelo.id,
             modelo.descripcion,
             modelo.estado,
-            modelo.id_usuario
+            int(modelo.id_usuario) if modelo.id_usuario is not None else None,
+            modelo.departamento,
+            modelo.fecha_creacion,
+            modelo.foto,
+            modelo.fecha_resolucion
         )
     
     def adherir_usuario_a_reclamo(self,id_usuario, id_reclamo):
@@ -72,6 +84,10 @@ class RepositorioReclamosSQLAlchemy(RepositorioAbstracto):
     def obtener_adherentes(self, id_reclamo):
         adherencias= self.__session.query(Adherencia).filter_by(id_reclamo=id_reclamo).all()
         return [a.id_usuario for a in adherencias]
+    
+
+
+
     
 class RepositorioUsuariosSQLAlchemy(RepositorioAbstracto):
     def __init__(self, session):
@@ -99,9 +115,13 @@ class RepositorioUsuariosSQLAlchemy(RepositorioAbstracto):
         register = self.__session.query(ModeloUsuario).filter_by(id=usuario_modificado.id).first()
         if register:
             register.nombre = usuario_modificado.nombre
+            register.apelldio= usuario_modificado.apellido
+            register.username= usuario_modificado.username
             register.email = usuario_modificado.email
             register.password = usuario_modificado.password
             register.rol= usuario_modificado.rol
+            register.departamento=usuario_modificado.departamento
+            register.claustro=usuario_modificado.claustro
             self.__session.commit()
         else:
             raise ValueError("El usuario no existe en la base de datis")
@@ -121,18 +141,25 @@ class RepositorioUsuariosSQLAlchemy(RepositorioAbstracto):
         return ModeloUsuario(
             id= entidad.id,
             nombre=entidad.nombre,
+            apellido=entidad.apellido,
+            username=entidad.username,
             email=entidad.email,
             password=entidad.password,
             rol=entidad.rol,
-            departamento=entidad.departamento
+            departamento=entidad.departamento,
+            claustro=entidad.claustro
         )
     
     def __map_modelo_a_entidad(self, modelo: ModeloUsuario):
         return Usuario(
             modelo.id,
             modelo.nombre,
+            modelo.apellido,
+            modelo.username,
             modelo.email,
             modelo.password,
             modelo.rol,
-            modelo.departamento
+            modelo.departamento,
+            modelo.claustro
+            
         )

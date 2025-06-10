@@ -1,30 +1,43 @@
-{% extends "layout.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reclamos Similares</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Reclamos similares encontrados</h2>
+        <p>Puedes adherirte a uno existente o continuar con la creación del tuyo.</p>
 
-{% block title %}Reclamos Similares{% endblock %}
+        {% if similares %}
+            <div class="grid-container">
+                {% for reclamo in similares %}
+                <div class="card">
+                    <p><strong>ID:</strong> {{ reclamo.id }}</p>
+                    <p><strong>Descripción:</strong> {{ reclamo.descripcion }}</p>
+                    <p><strong>Estado:</strong> <span class="status {{ reclamo.estado }}">{{ reclamo.estado }}</span></p>
 
-{% block content %}
-<div class="container">
-    <h2>Reclamos similares encontrados</h2>
-    <p>Puedes adherirte a uno existente o continuar con la creación del tuyo.</p>
-
-    {% if similares %}
-        <div class="grid-container">
-            {% for reclamo in similares %}
-            <div class="card">
-                <p><strong>ID:</strong> {{ reclamo.id }}</p>
-                <p><strong>Descripción:</strong> {{ reclamo.descripcion }}</p>
-                <p><strong>Estado:</strong> <span class="status {{ reclamo.estado }}">{{ reclamo.estado }}</span></p>
-
-                <form action="{{ url_for('adherirse') }}" method="POST">
-                    <input type="hidden" name="id_reclamo" value="{{ reclamo.id }}">
-                    <button type="submit" class="btn-join">Adherirme a este reclamo</button>
-                </form>
+                    <form action="{{ url_for('adherirse') }}" method="POST">
+                        <input type="hidden" name="id_reclamo" value="{{ reclamo.id }}">
+                        <button type="submit" class="btn-join">Adherirme a este reclamo</button>
+                    </form>
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
+        {% else %}
+            <p>No se encontraron reclamos similares.</p>
+        {% endif %}
+
+        <!-- 🔹 Crear reclamo propio -->
+        <div class="create-own">
+            <p>¿Prefieres crear tu propio reclamo?</p>
+            <form action="{{ url_for('agregar_reclamo') }}" method="POST">
+                <input type="hidden" name="descripcion" value="{{ descripcion|default('') }}">
+                <input type="hidden" name="departamento" value="{{ departamento|default('') }}">
+                <button type="submit" class="btn-create">Crear mi propio reclamo igualmente</button>
+            </form>
         </div>
-    {% else %}
-        <p>No se encontraron reclamos similares.</p>
-        <a href="{{ url_for('agregar_reclamo') }}" class="btn-primary">Crear nuevo reclamo</a>
-    {% endif %}
-</div>
-{% endblock %}
+    </div>
+</body>
+</html>

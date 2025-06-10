@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Reclamo</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Editar Reclamo</h1>
+
+        <!--Mensajes de error / éxito -->
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+          {% if mensajes %}
+            {% for categoria, mensaje in mensajes %}
+              <div class="alert alert-{{ categoria }}">{{ mensaje }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% if reclamo %}
+            <form method="POST">
+                <label for="descripcion">Descripción:</label>
+                <p class="descripcion">{{ reclamo.descripcion }}</p>
+
+                <label for="estado">Estado:</label>
+                <select name="estado" class="form-control">
+                    <option value="pendiente" {% if reclamo.estado == "pendiente" %}selected{% endif %}>Pendiente</option>
+                    <option value="en proceso" {% if reclamo.estado == "en proceso" %}selected{% endif %}>En proceso</option>
+                    <option value="resuelto" {% if reclamo.estado == "resuelto" %}selected{% endif %}>Resuelto</option>
+                    <option value="inválido" {% if reclamo.estado == "inválido" %}selected{% endif %}>Inválido</option>
+                </select>
+
+                <button type="submit" class="btn-save">Guardar cambios</button>
+            </form>
+        {% else %}
+            <p class="error">El reclamo no fue encontrado.</p>
+        {% endif %}
+
+        <div class="button-container">
+            <a href="{{ url_for('dashboard') }}" class="btn-back">Volver al Dashboard</a>
+            <a href="{{ url_for('listar_reclamos') }}" class="btn-secondary">Ver todos los reclamos</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Adherirse a Reclamo</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Adherirse a Reclamo</h1>
+
+        <!-- 🔹 Mensajes de error / éxito -->
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+          {% if mensajes %}
+            {% for categoria, mensaje in mensajes %}
+              <div class="alert alert-{{ categoria }}">{{ mensaje }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <p>Te has adherido exitosamente al reclamo. Esto ayudará a que sea atendido con mayor prioridad.</p>
+
+        <div class="button-container">
+            <a href="{{ url_for('listar_reclamos') }}" class="btn-primary">Ver todos los reclamos</a>
+            <a href="{{ url_for('mis_reclamos') }}" class="btn-secondary">Mis Reclamos</a>
+            <a href="{{ url_for('menu_principal') }}" class="btn-tertiary">Volver al menú principal</a>
+        </div>
+    </div>
+</body>
+</html>

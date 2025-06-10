@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Menú Principal</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Bienvenido, {{ current_user.nombre }}!</h1>
+        <p>Selecciona una opción:</p>
+
+        <div class="button-container">
+            <a href="{{ url_for('agregar_reclamo') }}" class="btn-primary">Crear Reclamo</a>
+            <a href="{{ url_for('listar_reclamos') }}" class="btn-secondary">Listar Reclamos</a>
+            <a href="{{ url_for('mis_reclamos') }}" class="btn-secondary">Mis Reclamos</a>
+        </div>
+
+        <div class="logout-container">
+            <a href="{{ url_for('logout') }}" class="btn-logout">Cerrar sesión</a>
+        </div>
+    </div>
+</body>
+</html>
