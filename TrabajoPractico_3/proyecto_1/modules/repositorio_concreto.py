@@ -2,6 +2,8 @@ from modules.repositorio_abstracto import RepositorioAbstracto
 from modules.modelos import ModeloReclamo, ModeloUsuario, Adherencia
 from modules.dominio import Reclamo, Usuario
 from datetime import datetime
+from sqlalchemy import func 
+
 
 class RepositorioReclamosSQLAlchemy(RepositorioAbstracto):
     def __init__(self, session):
@@ -37,7 +39,19 @@ class RepositorioReclamosSQLAlchemy(RepositorioAbstracto):
     def obtener_registro_por_filtro(self, filtro, valor):
         modelo_reclamo=self.__session.query(ModeloReclamo).filter_by(**{filtro: valor}).first()
         return self.__map_modelo_a_entidad(modelo_reclamo) if modelo_reclamo else None
-    
+
+    def obtener_registros_por_filtros(self, **filtros):
+        query = self.__session.query(ModeloReclamo)
+        for clave, valor in filtros.items():
+            if clave == 'departamento':
+                # El especialista sabe cómo manejar este caso particular
+                query = query.filter(func.lower(ModeloReclamo.departamento) == valor.lower())
+            else:
+                query = query.filter(getattr(ModeloReclamo, clave) == valor)
+
+        modelo_reclamos = query.all()
+        return [self.__map_modelo_a_entidad(reclamo) for reclamo in modelo_reclamos]
+        
     def eliminar_registro(self, id):
         registro= self.__session.query(ModeloReclamo).filter_by(id=id).first()
         self.__session.delete(registro)

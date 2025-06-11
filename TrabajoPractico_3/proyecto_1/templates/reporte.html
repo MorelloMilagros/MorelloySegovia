@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Reclamos - {{ departamento }}</title>
+    <style>
+        /* Estilos optimizados para impresión y PDF */
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            color: #333;
+        }
+        .report-header {
+            text-align: center;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .report-header h1 {
+            margin: 0;
+            color: #0056b3;
+        }
+        .report-header p {
+            margin: 5px 0;
+            font-size: 1.1em;
+        }
+        .summary-section {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .summary-item {
+            text-align: center;
+        }
+        .summary-item h3 {
+            margin: 0 0 5px 0;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            color: #555;
+        }
+        .summary-item p {
+            margin: 0;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .table-container h2 {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .status {
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-header">
+        <h1>Reporte de Estado de Reclamos</h1>
+        <p>Departamento: <strong>{{ departamento }}</strong></p>
+        <p>Fecha de Generación: {{ fecha_generacion }}</p>
+    </div>
+
+    <div class="summary-section">
+        <div class="summary-item">
+            <h3>Total</h3>
+            <p>{{ stats.total or 0 }}</p>
+        </div>
+        <div class="summary-item">
+            <h3>Pendientes</h3>
+            <p>{{ stats.pendientes or 0 }}</p>
+        </div>
+        <div class="summary-item">
+            <h3>En Proceso</h3>
+            <p>{{ stats.en_proceso or 0 }}</p>
+        </div>
+        <div class="summary-item">
+            <h3>Resueltos</h3>
+            <p>{{ stats.resueltos or 0 }}</p>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <h2>Detalle de Reclamos</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>ID Usuario</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th>Fecha Creación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if lista_reclamos %}
+                    {% for reclamo in lista_reclamos %}
+                    <tr>
+                        <td>{{ reclamo.id }}</td>
+                        <td>{{ reclamo.id_usuario }}</td>
+                        <td>{{ reclamo.descripcion }}</td>
+                        <td><span class="status">{{ reclamo.estado }}</span></td>
+                        <td>{{ reclamo.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center;">No hay reclamos para mostrar en este departamento.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

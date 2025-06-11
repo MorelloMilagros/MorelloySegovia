@@ -3,36 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <title>Analítica - {{ current_user.departamento }}</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- 🔹 Librería para gráficos -->
+    <!-- Librerías para los gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.js"></script>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: flex-start;
+        }
+        .chart-card, .stats-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        #wordCloudContainer {
+            width: 100%;
+            height: 400px; /* Altura fija para el contenedor de la nube */
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Contenedor de datos para pasar las estadísticas de forma segura de Flask a JavaScript -->
+    <!-- FIX: Added |safe filter to prevent Jinja from escaping JSON quotes -->
+    <div id="analytics-data" data-stats='{{ stats | tojson | safe }}' style="display: none;"></div>
+
+    <div class="container" style="width: 80%;">
         <h1>Analítica - {{ current_user.departamento }}</h1>
         <p>Resumen de estadísticas de los reclamos en el departamento.</p>
 
-        <!-- 🔹 Número total de reclamos -->
-        <div class="stats-box">
-            <h2>Total de Reclamos</h2>
-            <p class="big-number">{{ stats.total }}</p>
+        <div class="grid-container">
+            <!-- Columna Izquierda: Gráfico de torta y medianas -->
+            <div class="chart-card">
+                <h3>Distribución de Estados</h3>
+                <canvas id="chartEstados"></canvas>
+                <div class="stats-box" style="margin-top: 20px;">
+                    <h3>Tiempo de resolución (mediana)</h3>
+                    <p><strong>Resueltos:</strong> {{ stats.mediana_resueltos or "N/A" }} días</p>
+                    <p><strong>En Proceso:</strong> {{ stats.mediana_en_proceso or "N/A" }} días</p>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Nube de palabras clave -->
+            <div class="chart-card">
+                <h3>Palabras Clave en Reclamos</h3>
+                <div id="wordCloudContainer"></div>
+            </div>
         </div>
 
-        <!-- 🔹 Gráfico de distribución de estados -->
-        <canvas id="chartEstados"
-                data-pendientes="{{ stats.pendientes }}"
-                data-enproceso="{{ stats.en_proceso }}"
-                data-resueltos="{{ stats.resueltos }}">
-        </canvas>
+        <div class="button-container" style="margin-top: 20px;">
+            <a href="{{ url_for('dashboard') }}" class="btn-back">Volver al Dashboard</a>
+        </div>
+    </div>
 
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                var canvas = document.getElementById("chartEstados");
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // --- Leer y parsear los datos de forma segura ---
+            const dataContainer = document.getElementById('analytics-data');
+            if (!dataContainer) {
+                console.error('Error: No se encontró el contenedor de datos.');
+                return;
+            }
+            // Parseamos el string JSON del atributo data-stats a un objeto JavaScript
+            const stats = JSON.parse(dataContainer.dataset.stats || '{}');
 
-                var pendientes = parseInt(canvas.dataset.pendientes) || 0;
-                var enProceso = parseInt(canvas.dataset.enproceso) || 0;
-                var resueltos = parseInt(canvas.dataset.resueltos) || 0;
-
-                var ctx = canvas.getContext("2d");
+            // --- GRÁFICO DE TORTA ---
+            const pieCanvas = document.getElementById("chartEstados");
+            if (pieCanvas) {
+                const pendientes = stats.pendientes || 0;
+                const enProceso = stats.en_proceso || 0;
+                const resueltos = stats.resueltos || 0;
+                const ctx = pieCanvas.getContext("2d");
 
                 new Chart(ctx, {
                     type: "pie",
@@ -44,19 +87,29 @@
                         }]
                     }
                 });
-            });
-        </script>
+            }
 
-        <!-- 🔹 Mediana de tiempos de resolución -->
-        <div class="stats-box">
-            <h2>Tiempo de resolución (mediana)</h2>
-            <p><strong>Resueltos:</strong> {{ stats.mediana_resueltos or "N/A" }} días</p>
-            <p><strong>En Proceso:</strong> {{ stats.mediana_en_proceso or "N/A" }} días</p>
-        </div>
-
-        <div class="button-container">
-            <a href="{{ url_for('dashboard') }}" class="btn-back">Volver al Dashboard</a>
-        </div>
-    </div>
+            // --- NUBE DE PALABRAS ---
+            const wordCloudContainer = document.getElementById('wordCloudContainer');
+            if (wordCloudContainer) {
+                const palabras = stats.palabras_clave;
+                if (palabras && palabras.length > 0) {
+                    WordCloud(wordCloudContainer, {
+                        list: palabras.map(function(item) {
+                            // item[0] es la palabra, item[1] es la frecuencia
+                            return [item[0], item[1] * 10]; 
+                        }),
+                        gridSize: Math.round(16 * wordCloudContainer.clientWidth / 1024),
+                        weightFactor: 4,
+                        fontFamily: 'Inter, sans-serif',
+                        color: 'random-light',
+                        backgroundColor: 'transparent'
+                    });
+                } else {
+                    wordCloudContainer.innerHTML = '<p style="text-align: center; margin-top: 50px;">No hay suficientes palabras para generar un gráfico.</p>';
+                }
+            }
+        });
+    </script>
 </body>
 </html>

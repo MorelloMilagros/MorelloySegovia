@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request,flash, redirect, url_for, session
+from flask import Flask, render_template, request,flash, redirect, url_for, session, Response
 from flask_login import LoginManager, login_required, logout_user, current_user
 from modules.config import app, login_manager
 from modules.factoria import crear_repositorio
@@ -7,8 +7,11 @@ from modules.gestor_reclamos import GestorDeReclamos
 from modules. gestor_usuarios import GestorDeUsuarios
 from modules.formularios import FormRegistro, FormLogin, FormReclamo
 from modules.dominio import Usuario
-import pickle
+from datetime import datetime
 from werkzeug.utils import secure_filename
+from io import BytesIO             
+from xhtml2pdf import pisa   
+import pickle
 import os
 
 with open('./data/claims_clf.pkl', 'rb') as archivo:
@@ -76,7 +79,7 @@ def login():
             gestor_login.login_usuario(usuario)
             session['username']= gestor_login.nombre_usuario_actual
             if current_user.es_jefe() or current_user.es_secretario or current_user.es_tecnico():
-                return redirect(url_for('dashboard.html'))
+                return redirect(url_for('dashboard'))
             else:
                         return redirect(url_for('menu_principal'))
         except ValueError as e:
@@ -117,13 +120,27 @@ def dashboard():
 @login_required
 def listar_reclamos():
     """Lista todos los reclamos disponibles."""
-    departamento_filtro= request.args.get('departamento')
-    if current_user.es_jefe() or current_user.es_secretario or current_user.es_tecnico():
-        lista_reclamos= gestor_reclamos.listar_reclamos_por_departamento(current_user.departamento)
+    departamento_filtro = request.args.get('departamento')
+
+    if current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico():
+        # Los jefes ven todos los estados de su depto.
+        lista_reclamos = gestor_reclamos.listar_reclamos_por_departamento(current_user.departamento)
     else:
-        lista_reclamos=gestor_reclamos.listar_reclamos_para_usuarios()
-    departamentos= gestor_reclamos.obtener_departamentos()
-    return render_template('listar_reclamos.html', lista_reclamos=lista_reclamos, departamentos=departamentos, departamento_filtro=departamento_filtro)
+        # Los usuarios finales solo ven reclamos "pendientes"
+        if departamento_filtro:
+            # Filtra por departamento, pero solo los pendientes
+            lista_reclamos = gestor_reclamos.listar_reclamos_por_departamento(departamento_filtro, estado="pendiente")
+        else:
+            # Muestra todos los pendientes de todos los deptos.
+            lista_reclamos = gestor_reclamos.listar_reclamos_para_usuarios()
+            
+    departamentos = gestor_reclamos.obtener_departamentos()
+
+    return render_template('listar_reclamos.html', 
+                           lista_reclamos=lista_reclamos, 
+                           departamentos=departamentos, 
+                           departamento_filtro=departamento_filtro)
+
 
 @app.route("/agregar_reclamo", methods=["GET", "POST"])
 @login_required
@@ -225,6 +242,53 @@ def analitica():
 @login_required
 def ayuda():
     return render_template("ayuda.html")
+
+@app.route('/generar_reporte')
+@login_required
+def generar_reporte():
+    """Genera un reporte de reclamos en formato HTML o PDF usando xhtml2pdf.  """
+    # Control de acceso
+    if not(current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico()):
+        flash("Acceso denegado.", "error")
+        return redirect(url_for('inicio'))
+    try:
+        # Obtener los datos 
+        departamento = current_user.departamento
+        reclamos = gestor_reclamos.listar_reclamos_por_departamento(departamento)
+        stats = gestor_reclamos.obtener_estadisticas(departamento)
+    except Exception as e:
+        flash(f"Error al generar los datos del reporte: {str(e)}", "error")
+        return redirect(url_for('dashboard'))
+
+    formato_salida = request.args.get('formato', 'html')
+
+    # Renderiza la plantilla HTML
+    html_renderizado = render_template('reporte.html',
+                                       lista_reclamos=reclamos,
+                                       stats=stats,
+                                       departamento=departamento,
+                                       fecha_generacion=datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+    if formato_salida == 'pdf':
+        # Creamos un buffer de memoria para guardar el PDF
+        pdf_buffer = BytesIO()
+        
+        # Convertimos el HTML a PDF usando pisa
+        pisa_status = pisa.CreatePDF(
+            BytesIO(html_renderizado.encode('UTF-8')),  # La fuente HTML
+            dest=pdf_buffer)                            # El destino donde se guarda el PDF
+
+        # Si la conversión no tuvo errores, enviamos el PDF
+        if not pisa_status.err:
+            pdf_buffer.seek(0) # Regresamos al inicio del buffer para leer su contenido
+            return Response(pdf_buffer,
+                            mimetype='application/pdf',
+                            headers={'Content-Disposition': 'attachment;filename=reporte_reclamos.pdf'})
+        else:
+            flash('Hubo un error al generar el archivo PDF.', 'error')
+            return redirect(url_for('dashboard'))
+    else:
+        # Mostrar HTML (sin cambios)
+        return html_renderizado
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)

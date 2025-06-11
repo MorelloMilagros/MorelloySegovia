@@ -4,33 +4,97 @@
     <meta charset="UTF-8">
     <title>Lista de Reclamos</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Estilos adicionales para mejorar la tabla y los botones */
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 0.9em;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+        }
+        .styled-table thead tr {
+            background-color: #007bff;
+            color: #ffffff;
+            text-align: left;
+        }
+        .styled-table th, .styled-table td {
+            padding: 12px 15px;
+        }
+        .styled-table tbody tr {
+            border-bottom: 1px solid #dddddd;
+        }
+        .styled-table tbody tr:nth-of-type(even) {
+            background-color: rgba(0,0,0,0.05);
+        }
+        .styled-table tbody tr:last-of-type {
+            border-bottom: 2px solid #007bff;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+        }
+        .status.pendiente { background-color: #f39c12; }
+        .status.en.proceso { background-color: #3498db; }
+        .status.resuelto { background-color: #2ecc71; }
+        .status.inválido { background-color: #e74c3c; }
+
+        .btn-join, .btn-edit {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+        }
+        .btn-join { background-color: #28a745; }
+        .btn-edit { background-color: #ffc107; color: #333; }
+        
+        .filter-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Reclamos Disponibles</h1>
+    <div class="container" style="width: 80%; max-width: 1200px;">
+        <h1>Lista de Reclamos</h1>
 
-        <!-- Mensajes de error / éxito -->
-        {% with mensajes = get_flashed_messages(with_categories=true) %}
-          {% if mensajes %}
-            {% for categoria, mensaje in mensajes %}
-              <div class="alert alert-{{ categoria }}">{{ mensaje }}</div>
-            {% endfor %}
-          {% endif %}
+        <!-- Bloque para mostrar mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
         {% endwith %}
 
-        <!-- Filtro por departamento -->
-        <form method="GET" action="{{ url_for('listar_reclamos') }}" class="filter-form">
-            <label for="departamento">Filtrar por departamento:</label>
-            <select name="departamento" class="form-control">
-                <option value="">Todos</option>
-                {% for depto in departamentos %}
-                    <option value="{{ depto }}" {% if departamento_filtro == depto %}selected{% endif %}>{{ depto }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn-filter">Filtrar</button>
-        </form>
+        <!-- Si el usuario NO es personal, mostrar el filtro por departamento -->
+        {% if not (current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico()) %}
+            <form method="GET" action="{{ url_for('listar_reclamos') }}" class="filter-form">
+                <label for="departamento">Filtrar por departamento:</label>
+                <select name="departamento" class="form-control">
+                    <option value="">Todos</option>
+                    {% for depto in departamentos %}
+                        <option value="{{ depto }}" {% if departamento_filtro == depto %}selected{% endif %}>{{ depto }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-primary" style="width: auto; padding: 10px 20px;">Filtrar</button>
+            </form>
+        {% else %}
+             <p>Viendo reclamos para el departamento: <strong>{{ current_user.departamento }}</strong></p>
+        {% endif %}
 
-        <!-- Tabla con reclamos -->
+
+        <!-- Tabla con la lista de reclamos -->
         {% if lista_reclamos %}
             <table class="styled-table">
                 <thead>
@@ -38,7 +102,7 @@
                         <th>ID</th>
                         <th>Descripción</th>
                         <th>Estado</th>
-                        <th>Fecha</th>
+                        <th>Fecha Creación</th>
                         <th>Departamento</th>
                         <th>Adherentes</th>
                         <th>Foto</th>
@@ -50,25 +114,30 @@
                     <tr>
                         <td>{{ reclamo.id }}</td>
                         <td>{{ reclamo.descripcion }}</td>
-                        <td><span class="status {{ reclamo.estado }}">{{ reclamo.estado }}</span></td>
+                        <!-- La clase para el estado se genera dinámicamente -->
+                        <td><span class="status {{ reclamo.estado|replace(' ', '.') }}">{{ reclamo.estado }}</span></td>
                         <td>{{ reclamo.fecha_creacion.strftime('%d/%m/%Y') }}</td>
                         <td>{{ reclamo.departamento }}</td>
                         <td>{{ reclamo.adherentes }}</td>
                         <td>
                             {% if reclamo.foto %}
-                              <img src="{{ url_for('static', filename='uploads/' + reclamo.foto) }}" alt="Foto del reclamo" width="100">
+                                <img src="{{ url_for('static', filename='uploads/' + reclamo.foto) }}" alt="Foto del reclamo" width="100" style="border-radius: 5px;">
                             {% else %}
-                              <p>No hay foto disponible.</p>
+                                <span>No disponible</span>
                             {% endif %}
                         </td>
                         <td>
+                            <!-- El botón de adherirse solo aparece para usuarios finales -->
+                            {% if not (current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico()) %}
                             <form action="{{ url_for('adherirse') }}" method="POST" style="display:inline;">
                                 <input type="hidden" name="id_reclamo" value="{{ reclamo.id }}">
                                 <button type="submit" class="btn-join">Adherirse</button>
                             </form>
+                            {% endif %}
 
+                            <!-- El botón de editar solo aparece para el personal -->
                             {% if current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico() %}
-                                <a href="{{ url_for('editar_reclamo', id=reclamo.id) }}" class="btn-edit">✏ Editar</a>
+                                <a href="{{ url_for('editar_reclamo', id=reclamo.id) }}" class="btn-edit">✏️ Editar</a>
                             {% endif %}
                         </td>
                     </tr>
@@ -76,12 +145,16 @@
                 </tbody>
             </table>
         {% else %}
-            <p>No hay reclamos disponibles en este departamento.</p>
+            <div class="alert alert-info">No hay reclamos que coincidan con los criterios de búsqueda.</div>
         {% endif %}
 
-        <div class="button-container">
-            <a href="{{ url_for('agregar_reclamo') }}" class="btn-add">Agregar nuevo reclamo</a>
-            <a href="{{ url_for('dashboard') }}" class="btn-back">Volver al Dashboard</a>
+        <div class="links-container" style="margin-top: 30px;">
+            {% if current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico() %}
+                <a href="{{ url_for('dashboard') }}" class="btn-primary">Volver al Dashboard</a>
+            {% else %}
+                <a href="{{ url_for('menu_principal') }}" class="btn-primary">Volver al Menú</a>
+                <a href="{{ url_for('agregar_reclamo') }}" class="btn-secondary" style="margin-left: 10px;">Crear un Reclamo</a>
+            {% endif %}
         </div>
     </div>
 </body>

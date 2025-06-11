@@ -2,6 +2,8 @@ from modules.dominio import Reclamo
 from modules.repositorio_abstracto import RepositorioAbstracto
 from modules.monticulo_binario import MedianHeap
 from datetime import datetime, timedelta
+from collections import Counter
+from nltk.corpus import stopwords
 class GestorDeReclamos:
     def __init__(self, repo: RepositorioAbstracto, clasificador=None):
         self.__repo=repo
@@ -23,40 +25,52 @@ class GestorDeReclamos:
         reclamo= Reclamo(None, descripcion, "pendiente", id_usuario, departamento, p_foto=p_foto)
         self.__repo.guardar_registro(reclamo)
 
+
     def listar_reclamos(self):
-        reclamos=self.__repo.obtener_todos_los_registros()
-        resultado=[]
+            reclamos = self.__repo.obtener_registros_por_filtros()
+            resultado = []
+            for r in reclamos:
+                r_dict = r.to_dict()
+                r_dict['adherentes'] = self.obtener_cantidad_adherentes(r.id)
+                resultado.append(r_dict)
+            return resultado
+
+    def listar_reclamos_por_departamento(self, departamento, estado=None):
+        """
+        Devuelve una lista de reclamos filtrados.
+        Si se especifica un estado, también filtra por él.
+        """
+        if not departamento or departamento.strip() == "":
+            raise ValueError("El departamento no es válido")
+
+        # Construimos el diccionario de filtros dinámicamente
+        filtros = {"departamento": departamento.strip()}    
+        if estado:
+            filtros["estado"] = estado
+
+        # Una sola llamada eficiente a la base de datos
+        reclamos = self.__repo.obtener_registros_por_filtros(**filtros)
+
+        # Procesamos el resultado
+        resultado = []
         for r in reclamos:
-            r_dict= r.to_dict()
-            r_dict['adherentes']= self.obtener_cantidad_adherentes(r.id)
+            r_dict = r.to_dict()
+            r_dict['adherentes'] = self.obtener_cantidad_adherentes(r.id)
             resultado.append(r_dict)
         return resultado
 
-    def listar_reclamos_por_departamento(self, departamento):
-        """Devuelve una lista de reclamos filtrados por departamento."""
-        if not departamento or departamento.strip() == "":
-            raise ValueError("El departamento no es válido")
-        
-        departamento = departamento.strip().lower()  #Normaliza el valor para evitar diferencias en espacios o mayúsculas
-        modelo_reclamos = self.__repo.obtener_todos_los_registros()
-        resultado=[]
-        for r in modelo_reclamos:
-            if r.departamento.strip().lower()== departamento:
-                r_dict=r.to_dict()
-                r_dict['adherentes']=self.obtener_cantidad_adherentes
-                resultado.append(r_dict)
-        return resultado
-    
     def listar_reclamos_para_usuarios(self):
-        reclamos = self.__repo.obtener_todos_los_registros()
+        """
+        Obtiene solo los reclamos con estado 'pendiente'.
+        """
+        # Llamada eficiente que solo trae los pendientes
+        reclamos = self.__repo.obtener_registros_por_filtros(estado="pendiente")
         resultado = []
         for r in reclamos:
-            if r.estado == "pendiente":  # <- Filtrar solo pendientes
-                r_dict = r.to_dict()
-                r_dict["adherentes"] = self.obtener_cantidad_adherentes(r.id)
-                resultado.append(r_dict)
+            r_dict = r.to_dict()
+            r_dict['adherentes'] = self.obtener_cantidad_adherentes(r.id)
+            resultado.append(r_dict)
         return resultado
-
 
     def actualizar_estado_reclamo(self, id_reclamo, nuevo_estado, dias_resolucion=None):
         reclamo= self.__repo.obtener_registro_por_filtro("id", id_reclamo)
@@ -112,13 +126,22 @@ class GestorDeReclamos:
 
         mediana_resueltos= median_heap_resueltos.obtener_mediana() if resueltos > 0 else None
         mediana_en_proceso= median_heap_en_proceso.obtener_mediana() if en_proceso > 0 else None
-
+        #Unir el texto de todos los reclamos del departamento
+        texto_completo= ''.join([r.descripcion for r in reclamos])
+        #Tokenizar y limpiar el texto
+        stop_words_es= set(stopwords.words('spanish'))
+        tokens= [palabra.lower() for palabra in texto_completo.split() if palabra.isalpha() and palabra.lower() not in  stop_words_es]
+        #Contar las 15 palabras más frecuentes
+        contador_palabras= Counter(tokens)
+        palabras_clave= contador_palabras.most_common(15)  # Obtiene una lista de tuplas (palabra, frecuencia)
         return {
             "total":total,
             "pendientes": pendientes,
             "en proceso": en_proceso,
+            "resueltos":resueltos,
             "mediana resueltos": mediana_resueltos,
-            "mediana en proceso": mediana_en_proceso
+            "mediana en proceso": mediana_en_proceso,
+            "palabras_clave": palabras_clave
         }
     
     def obtener_reclamo(self, id_reclamo):

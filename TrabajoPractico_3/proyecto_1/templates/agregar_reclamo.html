@@ -2,41 +2,65 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Agregar Reclamo</title>
+    <title>Crear Nuevo Reclamo</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h2>Agregar Reclamo</h2>
+        <h2>Crear Nuevo Reclamo</h2>
+        <p>Por favor, completa los siguientes campos para registrar tu reclamo.</p>
 
-        <!-- 🔹 Mensajes de error / éxito -->
-        {% with mensajes = get_flashed_messages(with_categories=true) %}
-          {% if mensajes %}
-            {% for categoria, mensaje in mensajes %}
-              <div class="alert alert-{{ categoria }}">{{ mensaje }}</div>
-            {% endfor %}
-          {% endif %}
+        <!-- Bloque para mostrar mensajes flash (errores, éxito, etc.) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
         {% endwith %}
 
-        <form method="POST">
+        <!-- El 'enctype' es CRÍTICO para que la subida de archivos funcione -->
+        <form method="POST" enctype="multipart/form-data" novalidate>
+            
+            <!-- Campo oculto para el token CSRF, necesario para la seguridad del formulario -->
             {{ form.hidden_tag() }}
 
-            <label for="descripcion">Descripción:</label>
-            {{ form.descripcion(class="form-control", placeholder="Describe tu problema...") }}
-            {% for error in form.descripcion.errors %}
-                <div class="error">{{ error }}</div>
-            {% endfor %}
+            <!-- Campo de Descripción -->
+            <div class="form-group">
+                {{ form.descripcion.label(class="form-label") }}<br>
+                {{ form.descripcion(class="form-control", rows=6, placeholder="Detalla el problema aquí...") }}
+                {% for error in form.descripcion.errors %}
+                    <span class="error-text" style="color: #ff6b6b;">{{ error }}</span>
+                {% endfor %}
+            </div>
 
-            <label for="departamento">Departamento:</label>
-            {{ form.departamento(class="form-control") }}
-            {% for error in form.departamento.errors %}
-                <div class="error">{{ error }}</div>
-            {% endfor %}
+            <!-- Campo de Departamento (Select) -->
+            <div class="form-group">
+                {{ form.departamento.label(class="form-label") }}<br>
+                {{ form.departamento(class="form-control") }}
+                {% for error in form.departamento.errors %}
+                    <span class="error-text" style="color: #ff6b6b;">{{ error }}</span>
+                {% endfor %}
+            </div>
+            
+            <!-- Campo para adjuntar Foto -->
+            <div class="form-group">
+                {{ form.foto.label(class="form-label") }}<br>
+                {{ form.foto(class="form-control-file") }}
+                {% for error in form.foto.errors %}
+                    <span class="error-text" style="color: #ff6b6b;">{{ error }}</span>
+                {% endfor %}
+            </div>
 
-            <button type="submit" class="btn btn-primary">Enviar Reclamo</button>
+            <!-- Botón de Envío -->
+            <div class="form-group">
+                {{ form.submit(class="btn-primary") }}
+            </div>
         </form>
 
-        <p><a href="{{ url_for('dashboard') }}">Volver al Dashboard</a></p>
+        <div class="links-container" style="margin-top: 20px;">
+            <a href="{{ url_for('menu_principal') }}">Volver al menú principal</a>
+        </div>
     </div>
 </body>
 </html>
