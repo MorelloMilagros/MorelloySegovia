@@ -7,9 +7,9 @@
 </head>
 <body>
     <div class="container">
-        <h1>Reclamos Pendientes</h1>
+        <h1>Reclamos Disponibles</h1>
 
-        <!--Mensajes de error / éxito -->
+        <!-- Mensajes de error / éxito -->
         {% with mensajes = get_flashed_messages(with_categories=true) %}
           {% if mensajes %}
             {% for categoria, mensaje in mensajes %}
@@ -18,7 +18,7 @@
           {% endif %}
         {% endwith %}
 
-        <!--Filtro por departamento -->
+        <!-- Filtro por departamento -->
         <form method="GET" action="{{ url_for('listar_reclamos') }}" class="filter-form">
             <label for="departamento">Filtrar por departamento:</label>
             <select name="departamento" class="form-control">
@@ -30,7 +30,7 @@
             <button type="submit" class="btn-filter">Filtrar</button>
         </form>
 
-        <!--Tabla con reclamos -->
+        <!-- Tabla con reclamos -->
         {% if lista_reclamos %}
             <table class="styled-table">
                 <thead>
@@ -40,6 +40,7 @@
                         <th>Estado</th>
                         <th>Fecha</th>
                         <th>Departamento</th>
+                        <th>Adherentes</th>
                         <th>Foto</th>
                         <th>Acciones</th>
                     </tr>
@@ -52,33 +53,36 @@
                         <td><span class="status {{ reclamo.estado }}">{{ reclamo.estado }}</span></td>
                         <td>{{ reclamo.fecha_creacion.strftime('%d/%m/%Y') }}</td>
                         <td>{{ reclamo.departamento }}</td>
+                        <td>{{ reclamo.adherentes }}</td>
                         <td>
                             {% if reclamo.foto %}
-                              <img src="{{ url_for('static', filename='uploads/' + reclamo.foto) }}" alt="Foto del reclamo" width="200">
+                              <img src="{{ url_for('static', filename='uploads/' + reclamo.foto) }}" alt="Foto del reclamo" width="100">
                             {% else %}
                               <p>No hay foto disponible.</p>
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{{ url_for('editar_reclamo', id=reclamo.id) }}" class="btn-edit">Editar</a>
                             <form action="{{ url_for('adherirse') }}" method="POST" style="display:inline;">
                                 <input type="hidden" name="id_reclamo" value="{{ reclamo.id }}">
                                 <button type="submit" class="btn-join">Adherirse</button>
                             </form>
+
+                            {% if current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico() %}
+                                <a href="{{ url_for('editar_reclamo', id=reclamo.id) }}" class="btn-edit">✏ Editar</a>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         {% else %}
-            <p>No hay reclamos registrados en este departamento.</p>
+            <p>No hay reclamos disponibles en este departamento.</p>
         {% endif %}
 
         <div class="button-container">
             <a href="{{ url_for('agregar_reclamo') }}" class="btn-add">Agregar nuevo reclamo</a>
-            <a href="{{ url_for('menu_principal') }}" class="btn-back">Volver al Menú Principal</a>
+            <a href="{{ url_for('dashboard') }}" class="btn-back">Volver al Dashboard</a>
         </div>
     </div>
 </body>
 </html>
-

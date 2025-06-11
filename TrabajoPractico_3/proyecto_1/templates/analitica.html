@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Analítica - {{ current_user.departamento }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- 🔹 Librería para gráficos -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Analítica - {{ current_user.departamento }}</h1>
+        <p>Resumen de estadísticas de los reclamos en el departamento.</p>
+
+        <!-- 🔹 Número total de reclamos -->
+        <div class="stats-box">
+            <h2>Total de Reclamos</h2>
+            <p class="big-number">{{ stats.total }}</p>
+        </div>
+
+        <!-- 🔹 Gráfico de distribución de estados -->
+        <canvas id="chartEstados"
+                data-pendientes="{{ stats.pendientes }}"
+                data-enproceso="{{ stats.en_proceso }}"
+                data-resueltos="{{ stats.resueltos }}">
+        </canvas>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var canvas = document.getElementById("chartEstados");
+
+                var pendientes = parseInt(canvas.dataset.pendientes) || 0;
+                var enProceso = parseInt(canvas.dataset.enproceso) || 0;
+                var resueltos = parseInt(canvas.dataset.resueltos) || 0;
+
+                var ctx = canvas.getContext("2d");
+
+                new Chart(ctx, {
+                    type: "pie",
+                    data: {
+                        labels: ["Pendientes", "En Proceso", "Resueltos"],
+                        datasets: [{
+                            data: [pendientes, enProceso, resueltos],
+                            backgroundColor: ["#f39c12", "#3498db", "#2ecc71"]
+                        }]
+                    }
+                });
+            });
+        </script>
+
+        <!-- 🔹 Mediana de tiempos de resolución -->
+        <div class="stats-box">
+            <h2>Tiempo de resolución (mediana)</h2>
+            <p><strong>Resueltos:</strong> {{ stats.mediana_resueltos or "N/A" }} días</p>
+            <p><strong>En Proceso:</strong> {{ stats.mediana_en_proceso or "N/A" }} días</p>
+        </div>
+
+        <div class="button-container">
+            <a href="{{ url_for('dashboard') }}" class="btn-back">Volver al Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

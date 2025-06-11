@@ -2,54 +2,68 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel de Administración</title>
+    <title>Panel de Administración - {{ current_user.departamento }}</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Panel de Administración</h1>
+        <h1>Panel de Administración - {{ current_user.departamento }}</h1>
         <p>Bienvenido, {{ current_user.nombre }} ({{ current_user.rol }})</p>
 
-        <h2>Reclamos del Departamento</h2>
+        <!-- Opciones del Dashboard -->
+        <div class="button-container">
+            <a href="{{ url_for('analitica') }}" class="btn-primary">Analítica</a>
+            <a href="{{ url_for('ayuda') }}" class="btn-secondary"> Ayuda</a>
+            <a href="{{ url_for('agregar_reclamo') }}" class="btn-info">Generar Reporte</a>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Cerrar sesión</a>
+        </div>
+
+        <h2> Reclamos del Departamento</h2>
         <table>
-            <tr>
-                <th>ID</th>
-                <th>Descripción</th>
-                <th>Estado</th>
-                <th>Fecha</th>
-                <th>Acciones</th>
-            </tr>
-            {% for reclamo in lista_reclamos %}
-            <tr>
-                <td>{{ reclamo.id }}</td>
-                <td>{{ reclamo.descripcion }}</td>
-                <td>{{ reclamo.estado }}</td>
-                <td>{{ reclamo.fecha }}</td>
-                <td>
-                    <form action="{{ url_for('actualizar_estado_reclamo', id=reclamo.id) }}" method="POST">
-                        <select name="estado">
-                            <option value="pendiente" {% if reclamo.estado == "pendiente" %} selected {% endif %}>Pendiente</option>
-                            <option value="en proceso" {% if reclamo.estado == "en proceso" %} selected {% endif %}>En Proceso</option>
-                            <option value="resuelto" {% if reclamo.estado == "resuelto" %} selected {% endif %}>Resuelto</option>
-                            <option value="invalido" {% if reclamo.estado == "invalido" %} selected {% endif %}>Inválido</option>
-                        </select>
-                        <button type="submit">Actualizar</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Adherentes</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reclamo in lista_reclamos %}
+                <tr>
+                    <td>{{ reclamo.id }}</td>
+                    <td>{{ reclamo.descripcion }}</td>
+                    <td><span class="status {{ reclamo.estado }}">{{ reclamo.estado }}</span></td>
+                    <td>{{ reclamo.fecha_creacion.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ reclamo.adherentes }}</td>
+                    <td>
+                        <!-- Formulario para actualizar estado -->
+                        <form action="{{ url_for('editar_reclamo', id=reclamo.id) }}" method="GET" style="display:inline;">
+                            <button type="submit" class="btn-edit">Editar Reclamo</button>
+                        </form>
+
+                        <!-- Opción exclusiva para Secretaría Técnica -->
+                        {% if current_user.es_secretario() %}
+                            <form action="{{ url_for('derivar_reclamo', id=reclamo.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn-transfer"> Derivar</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
-        <h2>Estadísticas</h2>
-        <p>Reclamos pendientes: {{ stats.pendientes }}</p>
-        <p>Reclamos en proceso: {{ stats.en_proceso }}</p>
-        <p>Reclamos resueltos: {{ stats.resueltos }}</p>
+
+        <h2>Estadísticas del Departamento</h2>
+        <p><strong>Reclamos pendientes:</strong> {{ stats.pendientes }}</p>
+        <p><strong>Reclamos en proceso:</strong> {{ stats.en_proceso }}</p>
+        <p><strong>Reclamos resueltos:</strong> {{ stats.resueltos }}</p>
 
         <h3>Tiempo medio de resolución</h3>
-        <p>Mediana en proceso: {{ stats.mediana_en_proceso if stats.mediana_en_proceso else "No disponible" }}</p>
-        <p>Mediana resueltos: {{ stats.mediana_resueltos if stats.mediana_resueltos else "No disponible" }}</p>
-
-
-        <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+        <p><strong>Mediana en proceso:</strong> {{ stats.mediana_en_proceso if stats.mediana_en_proceso else "No disponible" }}</p>
+        <p><strong>Mediana resueltos:</strong> {{ stats.mediana_resueltos if stats.mediana_resueltos else "No disponible" }}</p>
     </div>
 </body>
 </html>

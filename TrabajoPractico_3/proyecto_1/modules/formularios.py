@@ -26,10 +26,7 @@ class FormLogin(FlaskForm):
 
 class FormReclamo(FlaskForm):
     descripcion= TextAreaField("Descripción", validators=[DataRequired(), Length(min=10, max=1000)])
-    departamento= SelectField("Departamento", choices=[("Atención al cliente", "Atención al cliente"),
-                                                       ("Soporte técnico","Soporte Técnico"),
-                                                       ("Facturación","Facturación")],
-                                                       validators=[DataRequired()])
+    departamento= SelectField("Departamento", choices=[], validators=[DataRequired()])
     foto= FileField("Adjuntar Imagen (opcional)", validators=[FileAllowed(['jpg','png','jpeg'], "Solo imágenes")])
     submit=SubmitField("Enviar Reclamo")
     

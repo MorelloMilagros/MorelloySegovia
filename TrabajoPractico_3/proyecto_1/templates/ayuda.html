@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ayuda y Soporte</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Ayuda y Soporte</h1>
+        <p>Encuentra información sobre cómo usar el sistema de gestión de reclamos.</p>
+
+        <section>
+            <h2>📌 ¿Cómo crear un reclamo?</h2>
+            <p>Para crear un nuevo reclamo, sigue estos pasos:</p>
+            <ul>
+                <li>Accede a la opción <strong>"Crear Reclamo"</strong> en el menú principal.</li>
+                <li>Rellena el formulario con la descripción del problema.</li>
+                <li>Opcionalmente, adjunta una foto del reclamo.</li>
+                <li>Haz clic en <strong>"Enviar"</strong> y recibirás una confirmación.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>📌 ¿Cómo ver y adherirse a reclamos?</h2>
+            <p>Desde la opción <strong>"Listar Reclamos"</strong>, puedes:</p>
+            <ul>
+                <li>Filtrar por departamento.</li>
+                <li>Ver detalles de cada reclamo.</li>
+                <li>Adherirte a un reclamo existente para apoyar su resolución.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>📌 ¿Cómo gestionar reclamos como responsable?</h2>
+            <p>Los jefes de departamento pueden:</p>
+            <ul>
+                <li>Acceder al <strong>Dashboard</strong> y ver solo los reclamos de su departamento.</li>
+                <li>Actualizar el estado de un reclamo (Pendiente, En Proceso, Resuelto, Inválido).</li>
+                <li>Asignar tiempos de resolución a los reclamos en proceso.</li>
+                <li>Generar informes detallados en HTML o PDF.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>📌 Contacto y soporte</h2>
+            <p>Si tienes dudas o problemas, puedes contactar al equipo de soporte técnico:</p>
+            <ul>
+                <li>📧 Email: soporte@facultad-uner.edu</li>
+                <li>📞 Teléfono: +54 3442 123456</li>
+            </ul>
+        </section>
+
+        <div class="button-container">
+            <a href="{{ url_for('dashboard') }}" class="btn-back">Volver al Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -84,6 +84,12 @@ class Reclamo:
     def fecha_resolucion(self, p_fecha_resolucion):
         self.__fecha_resolucion= p_fecha_resolucion
 
+    def calcular_tiempo_resolucion(self):
+        if self.fecha_resolucion and self.fecha_creacion:
+            return (self.fecha_resolucion - self.fecha_creacion).days
+        return None
+
+
     def to_dict(self):
         return {
             "id":self.id,

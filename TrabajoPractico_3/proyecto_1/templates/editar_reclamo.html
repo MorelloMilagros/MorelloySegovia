@@ -9,7 +9,6 @@
     <div class="container">
         <h1>Editar Reclamo</h1>
 
-        <!--Mensajes de error / éxito -->
         {% with mensajes = get_flashed_messages(with_categories=true) %}
           {% if mensajes %}
             {% for categoria, mensaje in mensajes %}
@@ -24,12 +23,18 @@
                 <p class="descripcion">{{ reclamo.descripcion }}</p>
 
                 <label for="estado">Estado:</label>
-                <select name="estado" class="form-control">
+                <select name="estado" class="form-control" id="estadoSelect">
                     <option value="pendiente" {% if reclamo.estado == "pendiente" %}selected{% endif %}>Pendiente</option>
                     <option value="en proceso" {% if reclamo.estado == "en proceso" %}selected{% endif %}>En proceso</option>
                     <option value="resuelto" {% if reclamo.estado == "resuelto" %}selected{% endif %}>Resuelto</option>
                     <option value="inválido" {% if reclamo.estado == "inválido" %}selected{% endif %}>Inválido</option>
                 </select>
+
+                <!-- Campo de tiempo dinámico -->
+                <div id="tiempoResolucion" style="display: none; margin-top: 10px;">
+                    <label for="tiempo">Tiempo de resolución (1 a 15 días):</label>
+                    <input type="number" name="tiempo" id="tiempo" class="form-control" min="1" max="15">
+                </div>
 
                 <button type="submit" class="btn-save">Guardar cambios</button>
             </form>
@@ -42,5 +47,25 @@
             <a href="{{ url_for('listar_reclamos') }}" class="btn-secondary">Ver todos los reclamos</a>
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const estadoSelect = document.getElementById("estadoSelect");
+            const tiempoDiv = document.getElementById("tiempoResolucion");
+
+            // Mostrar u ocultar el campo de tiempo según el valor actual al cargar
+            if (estadoSelect.value === "en proceso") {
+                tiempoDiv.style.display = "block";
+            }
+
+            estadoSelect.addEventListener("change", function () {
+                if (estadoSelect.value === "en proceso") {
+                    tiempoDiv.style.display = "block";
+                } else {
+                    tiempoDiv.style.display = "none";
+                }
+            });
+        });
+    </script>
 </body>
 </html>

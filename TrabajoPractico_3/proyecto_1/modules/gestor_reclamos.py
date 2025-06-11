@@ -1,7 +1,7 @@
 from modules.dominio import Reclamo
 from modules.repositorio_abstracto import RepositorioAbstracto
 from modules.monticulo_binario import MedianHeap
-from datetime import datetime
+from datetime import datetime, timedelta
 class GestorDeReclamos:
     def __init__(self, repo: RepositorioAbstracto, clasificador=None):
         self.__repo=repo
@@ -36,11 +36,16 @@ class GestorDeReclamos:
         """Devuelve una lista de reclamos filtrados por departamento."""
         if not departamento or departamento.strip() == "":
             raise ValueError("El departamento no es válido")
+        
         departamento = departamento.strip().lower()  #Normaliza el valor para evitar diferencias en espacios o mayúsculas
         modelo_reclamos = self.__repo.obtener_todos_los_registros()
-        reclamos_filtrados = [r for r in modelo_reclamos if r.departamento.strip().lower() == departamento]
-        print(f"Reclamos encontrados para '{departamento}': {len(reclamos_filtrados)}")  #Depuración
-        return reclamos_filtrados
+        resultado=[]
+        for r in modelo_reclamos:
+            if r.departamento.strip().lower()== departamento:
+                r_dict=r.to_dict()
+                r_dict['adherentes']=self.obtener_cantidad_adherentes
+                resultado.append(r_dict)
+        return resultado
     
     def listar_reclamos_para_usuarios(self):
         reclamos = self.__repo.obtener_todos_los_registros()
@@ -53,13 +58,14 @@ class GestorDeReclamos:
         return resultado
 
 
-    def actualizar_estado_reclamo(self, id_reclamo, nuevo_estado):
+    def actualizar_estado_reclamo(self, id_reclamo, nuevo_estado, dias_resolucion=None):
         reclamo= self.__repo.obtener_registro_por_filtro("id", id_reclamo)
         if reclamo:
             reclamo.estado=nuevo_estado
             if nuevo_estado== "resuelto":
                 reclamo.fecha_resolucion = datetime.utcnow()
-
+            elif nuevo_estado=="en proceso":
+                reclamo.fecha_resolucion=datetime.utcnow()+timedelta(days=dias_resolucion)
             self.__repo.modificar_registro(reclamo)
         else:
             raise ValueError("El reclamo no existe")
