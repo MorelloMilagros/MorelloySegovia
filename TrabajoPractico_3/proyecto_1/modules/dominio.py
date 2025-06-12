@@ -1,3 +1,5 @@
+from datetime import datetime
+
 class Reclamo:
     def __init__(self, p_id, p_descripcion, p_estado, pd_id_usuario, p_departamento="sin departamento", p_fecha_creacion=None, p_foto=None, p_fecha_resolucion=None):
         self.id= p_id
@@ -5,7 +7,12 @@ class Reclamo:
         self.estado =p_estado
         self.id_usuario= pd_id_usuario
         self.departamento= p_departamento
-        self.fecha_creacion = p_fecha_creacion
+        
+        # --- ESTA ES LA ÚNICA LÍNEA MODIFICADA ---
+        # Si no se proporciona una fecha de creación, usamos la fecha y hora actuales.
+        self.fecha_creacion = p_fecha_creacion or datetime.now()
+        # ----------------------------------------
+        
         self.foto=p_foto
         self.fecha_resolucion=p_fecha_resolucion
     
@@ -67,7 +74,7 @@ class Reclamo:
 
     @departamento.setter
     def departamento(self, p_departamento):
-        print(f"[DEBUG] Setter departamento: {p_departamento}")
+        # Eliminamos el print de debug para limpiar la consola
         if not isinstance(p_departamento, str) or p_departamento.strip()== "":
             raise ValueError("El departamento no puede estar vacío")
         self.__departamento=p_departamento
@@ -89,7 +96,6 @@ class Reclamo:
             return (self.fecha_resolucion - self.fecha_creacion).days
         return None
 
-
     def to_dict(self):
         return {
             "id":self.id,
@@ -97,7 +103,7 @@ class Reclamo:
             "estado": self.estado,
             "id_usuario": self.id_usuario,
             "departamento": self.departamento,
-            "fecha_creacion": getattr(self, "fecha_creacion", None),
+            "fecha_creacion": self.fecha_creacion, # Devolvemos el objeto datetime, no un string
             "fecha_resolucion":self.fecha_resolucion,
             "foto":self.foto
         }
@@ -117,6 +123,23 @@ class Usuario:
         self.rol=rol
         self.departamento= p_departamento or "sin departamento"
         self.claustro=p_claustro
+        
+    def es_jefe(self):
+        return self.rol == 'jefe'
+
+    def es_secretario(self):
+        return self.rol == 'secretario'
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    def get_id(self):
+        return str(self.id)
 
     @property
     def id(self):
@@ -206,6 +229,7 @@ class Usuario:
         if p_claustro not in ["estudiante", "docente", "pays"]:
             raise ValueError("Claustro Inválido")
         self.__claustro=p_claustro
+        
     def to_dict(self):
         return {
             "id": self.id,
@@ -218,4 +242,3 @@ class Usuario:
             "departamento":self.departamento,
             "claustro":self.claustro
         }
-            

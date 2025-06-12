@@ -73,16 +73,33 @@ class GestorDeReclamos:
         return resultado
 
     def actualizar_estado_reclamo(self, id_reclamo, nuevo_estado, dias_resolucion=None):
-        reclamo= self.__repo.obtener_registro_por_filtro("id", id_reclamo)
-        if reclamo:
-            reclamo.estado=nuevo_estado
-            if nuevo_estado== "resuelto":
-                reclamo.fecha_resolucion = datetime.utcnow()
-            elif nuevo_estado=="en proceso":
-                reclamo.fecha_resolucion=datetime.utcnow()+timedelta(days=dias_resolucion)
-            self.__repo.modificar_registro(reclamo)
-        else:
+        reclamo = self.repo.obtener_registro_por_filtro("id", id_reclamo)
+        if not reclamo:
             raise ValueError("El reclamo no existe")
+
+        reclamo.estado = nuevo_estado
+        
+        if nuevo_estado == "resuelto":
+            reclamo.fecha_resolucion = datetime.now()
+        elif nuevo_estado == "en proceso":
+            # --- LÓGICA CORREGIDA ---
+            # Ahora es obligatorio que dias_resolucion tenga un valor
+            if dias_resolucion is None:
+                raise ValueError("Para poner un reclamo 'en proceso', se debe especificar un tiempo de resolución.")
+            
+            try:
+                dias_int = int(dias_resolucion)
+                # La consigna especifica un rango de 1 a 15 días
+                if not (1 <= dias_int <= 15):
+                    raise ValueError("El tiempo de resolución debe estar entre 1 y 15 días.")
+                reclamo.fecha_resolucion = datetime.now() + timedelta(days=dias_int)
+            except (TypeError, ValueError):
+                # Esto atrapa si dias_resolucion no es un número (ej. "abc")
+                raise ValueError("El tiempo de resolución debe ser un número entero válido.")
+        
+        # Si el estado es "pendiente" o "inválido", no se toca la fecha_resolucion
+        
+        self.repo.modificar_registro(reclamo)
 
     def eliminar_reclamo(self, id_reclamo):
         if self.__repo.obtener_registro_por_filtro("id", id_reclamo):
@@ -107,8 +124,7 @@ class GestorDeReclamos:
 
     def obtener_estadisticas(self, departamento):
         """Genera estadisticas de reclamos para un depto especifico"""
-        reclamos= self.listar_reclamos_por_departamento(departamento)
-
+        reclamos = self.__repo.obtener_registros_por_filtros(departamento=departamento)
         total=len(reclamos)
         pendientes= sum(1 for r in reclamos if r.estado == "pendiente")
         en_proceso = sum(1 for r in reclamos if r.estado== "en proceso")
