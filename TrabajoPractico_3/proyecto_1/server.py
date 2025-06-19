@@ -150,7 +150,37 @@ def dashboard():
         stats={}
 
     return render_template('dashboard.html', lista_reclamos=reclamos, stats=stats)
+@app.route('/derivar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def derivar_reclamo(id):
+    """
+    Permite al Secretario Técnico derivar un reclamo a otro departamento.
+    """
+    # 1. Verificar permisos
+    if not current_user.es_secretario():
+        flash("Acceso denegado. Solo la Secretaría Técnica puede derivar reclamos.", "error")
+        return redirect(url_for('dashboard'))
 
+    # 2. Obtener datos necesarios
+    reclamo = gestor_reclamos.obtener_reclamo(id)
+    if not reclamo:
+        flash("Reclamo no encontrado.", "error")
+        return redirect(url_for('dashboard'))
+
+    # 3. Manejar la solicitud POST (cuando se confirma la derivación)
+    if request.method == 'POST':
+        nuevo_departamento = request.form.get('nuevo_departamento')
+        try:
+            gestor_reclamos.derivar_reclamo(id, nuevo_departamento)
+            flash(f"Reclamo {id} derivado exitosamente a {nuevo_departamento}.", "success")
+            return redirect(url_for('dashboard'))
+        except ValueError as e:
+            flash(str(e), "error")
+
+    # 4. Manejar la solicitud GET (mostrar la página para derivar)
+    departamentos = gestor_reclamos.obtener_departamentos()
+    return render_template('derivar_reclamo.html', reclamo=reclamo, departamentos=departamentos)
+    
 @app.route('/listar_reclamos', methods=['GET'])
 @login_required
 def listar_reclamos():

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Derivar Reclamo</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Derivar Reclamo ID: {{ reclamo.id }}</h2>
+        <p><strong>Descripción:</strong> {{ reclamo.descripcion }}</p>
+        <p><strong>Departamento Actual:</strong> {{ reclamo.departamento }}</p>
+
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+          {% if mensajes %}
+            {% for categoria, mensaje in mensajes %}
+              <div class="alert alert-{{ categoria }}">{{ mensaje }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <label for="nuevo_departamento">Seleccione el nuevo departamento:</label>
+            <select name="nuevo_departamento" class="form-control">
+                {% for depto in departamentos %}
+                    {% if depto != reclamo.departamento %}
+                        <option value="{{ depto }}">{{ depto }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn-primary" style="margin-top: 20px;">Confirmar Derivación</button>
+        </form>
+
+        <a href="{{ url_for('dashboard') }}" style="margin-top: 15px; display: block;">Cancelar y volver al Dashboard</a>
+    </div>
+</body>
+</html>

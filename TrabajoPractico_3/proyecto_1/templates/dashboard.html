@@ -190,9 +190,13 @@
                             
                             <!-- Botón de derivar solo para Secretaría Técnica -->
                             {% if current_user.es_secretario() %}
-                            <form action="{{ url_for('derivar_reclamo', id=reclamo.id) }}" method="POST" style="display:inline;">
-                                <button type="submit" class="btn-action" style="background-color: #17a2b8;">Derivar</button>
-                            </form>
+                            <td>
+                                <a href="{{ url_for('editar_reclamo', id=reclamo.id) }}" class="btn-action" style="background-color: #ffc107; color: #212529;">Editar</a>
+
+                                {% if current_user.es_secretario() %}
+                                <a href="{{ url_for('derivar_reclamo', id=reclamo.id) }}" class="btn-action" style="background-color: #17a2b8;">Derivar</a>
+                                {% endif %}
+                            </td>
                             {% endif %}
                         </td>
                     </tr>

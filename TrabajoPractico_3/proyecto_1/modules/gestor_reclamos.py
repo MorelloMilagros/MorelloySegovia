@@ -174,3 +174,17 @@ class GestorDeReclamos:
         similares= [r for r in todos if self.clasificar_descripcion(r.descripcion)== categoria]
         return similares
 
+    def derivar_reclamo(self, id_reclamo, nuevo_departamento):
+        """
+        Cambia el departamento de un reclamo específico.
+        Utilizado por la Secretaría Técnica.
+        """
+        reclamo = self.repo.obtener_registro_por_filtro("id", id_reclamo)
+        if not reclamo:
+            raise ValueError("El reclamo a derivar no existe.")
+        
+        if not nuevo_departamento or nuevo_departamento == reclamo.departamento:
+            raise ValueError("Debe seleccionar un departamento diferente para derivar.")
+
+        reclamo.departamento = nuevo_departamento
+        self.repo.modificar_registro(reclamo)
