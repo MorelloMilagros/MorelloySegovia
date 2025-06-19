@@ -31,7 +31,18 @@ login_manager.login_view= "login"
 def load_user(user_id):
     usuario = gestor_usuarios.cargar_usuario(user_id)
     return usuario
+    """
+    Carga un usuario desde la base de datos para Flask-Login.
 
+    Esta función es un callback requerido por Flask-Login. Se utiliza para recargar el objeto
+    de usuario a partir del ID de usuario almacenado en la sesión.
+
+    Args:
+        user_id (str): El ID del usuario a cargar.
+
+    Returns:
+        FlaskLoginUser or None: Una instancia de `FlaskLoginUser` si el usuario existe, de lo contrario, `None`.
+    """
 #Crear repositorios y gestores
 admin_list = [1]
 repo_reclamos, repo_usuarios = crear_repositorio()
@@ -75,7 +86,14 @@ def arreglar_departamento_jefe():
 # Ejecutamos la función de arreglo al iniciar la aplicación
 arreglar_departamento_jefe()
 # =====================================================================
-
+"""
+Función para corregir automáticamente el departamento de un usuario 'jefe' específico
+al iniciar la aplicación.
+Esto es útil para asegurar la consistencia de los datos iniciales, especialmente
+en entornos de desarrollo o demostración donde se espera que un usuario con un
+nombre de usuario predefinido (ej. "Lucas01") tenga un departamento específico
+("Soporte técnico").
+"""
 
 # Página de inicio
 @app.route('/')
@@ -86,6 +104,16 @@ def inicio():
     session['username'] = 'Invitado'
     lista_reclamos= gestor_reclamos.listar_reclamos()
     return render_template('inicio.html', user=session['username'], lista_reclamos=lista_reclamos)
+    """
+    Muestra la página de inicio de la aplicación.
+
+    Si el usuario ya está autenticado, lo redirige a la lista de reclamos
+    (o a su menú principal si es un usuario normal). De lo contrario,
+    muestra la página de bienvenida con opciones para registrarse o iniciar sesión.
+
+    Returns:
+        render_template: La plantilla 'inicio.html' o una redirección.
+    """
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -105,6 +133,20 @@ def register():
             return redirect(url_for("login"))
     return render_template('registro.html', form=form_registro)
 
+    """
+    Maneja el registro de nuevos usuarios en el sistema.
+
+    - **GET**: Muestra el formulario de registro.
+    - **POST**: Procesa los datos enviados por el formulario. Valida los datos
+      (usando Flask-WTF) y, si son válidos, intenta registrar al usuario
+      a través del `GestorDeUsuarios`. Si el registro es exitoso, redirige
+      al login; de lo contrario, muestra mensajes de error.
+
+    Returns:
+        render_template: La plantilla 'registro.html' con el formulario.
+        redirect: Redirección a la página de login en caso de éxito.
+    """
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form_login= FormLogin()
@@ -120,20 +162,45 @@ def login():
         except ValueError as e:
             flash(str(e), "error")
     return render_template('login.html', form=form_login)
+    """
+    Maneja el inicio de sesión de usuarios existentes.
 
+    - **GET**: Muestra el formulario de login.
+    - **POST**: Procesa las credenciales enviadas. Intenta autenticar al usuario
+      mediante el `GestorDeUsuarios`. Si la autenticación es exitosa, inicia
+      la sesión con Flask-Login y redirige al usuario a su panel correspondiente
+      (dashboard para jefes/secretarios, menú principal para usuarios comunes).
+      Si falla, muestra un mensaje de error.
+
+    Returns:
+        render_template: La plantilla 'login.html' con el formulario.
+        redirect: Redirección al dashboard o menú principal en caso de éxito.
+    """
 @app.route('/menu_principal')
 @login_required
 def menu_principal():
     """Menú principal que muestra las opciones principales al usuario."""
     return render_template("menu_principal.html")
-
+"""
+Muestra el menú principal para los usuarios finales.
+Requiere que el usuario esté autenticado (`@login_required`).
+Returns:
+render_template: La plantilla 'menu_principal.html'.
+"""
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     session['username'] = 'Invitado'
     return redirect(url_for('inicio'))
+    """
+    Cierra la sesión del usuario actual.
 
+    Invalida la sesión de Flask-Login y redirige al usuario a la página de inicio.
+
+    Returns:
+        redirect: Redirección a la página de inicio.
+    """
 @app.route('/dashboard', methods=['GET'])
 @login_required
 def dashboard():
@@ -150,6 +217,17 @@ def dashboard():
         stats={}
 
     return render_template('dashboard.html', lista_reclamos=reclamos, stats=stats)
+    """
+    Muestra el panel de administración para jefes de departamento y secretarios.
+
+    Requiere que el usuario esté autenticado y que tenga el rol de 'jefe' o 'secretario'.
+    Si el usuario no tiene el rol adecuado, se deniega el acceso.
+    Muestra una lista de reclamos del departamento del usuario y estadísticas relevantes.
+
+    Returns:
+        render_template: La plantilla 'dashboard.html' con los reclamos y estadísticas.
+        redirect: Redirección a la página de inicio si el acceso es denegado.
+    """
 @app.route('/derivar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def derivar_reclamo(id):
@@ -201,7 +279,21 @@ def listar_reclamos():
                           lista_reclamos=lista_reclamos, 
                           departamentos=departamentos, 
                           departamento_filtro=departamento_filtro)
+    """
+    Lista todos los reclamos disponibles o filtra por departamento.
 
+    Permite a los usuarios generales ver reclamos pendientes (con opción de filtrar
+    por departamento). Los usuarios con rol de personal (jefe/secretario/técnico)
+    ven todos los reclamos de su propio departamento, sin la opción de filtro general.
+
+    Args:
+        departamento (str, opcional): El departamento por el cual filtrar los reclamos.
+                                       Se obtiene de los parámetros de la URL.
+
+    Returns:
+        render_template: La plantilla 'listar_reclamos.html' con la lista de reclamos
+                         y los departamentos disponibles para filtrar.
+    """
 
 @app.route("/agregar_reclamo", methods=["GET", "POST"])
 @login_required
@@ -242,7 +334,23 @@ def agregar_reclamo():
             flash(f"Error al crear el reclamo: {str(e)}", "error ")
 
     return render_template("agregar_reclamo.html", form=form_reclamo)
+    """
+    Permite a un usuario crear un nuevo reclamo.
 
+    - **GET**: Muestra el formulario para crear el reclamo, precargando los
+      departamentos disponibles.
+    - **POST**: Procesa los datos del formulario. Si se detectan reclamos
+      similares basados en la descripción, ofrece la opción de adherirse
+      a uno existente. Si no hay similares o el usuario elige crear uno nuevo,
+      el reclamo se guarda en la base de datos. También maneja la subida de fotos
+      adjuntas al reclamo.
+
+    Muestra mensajes de éxito o error al usuario.
+
+    Returns:
+        render_template: Las plantillas 'agregar_reclamo.html' o 'reclamos_similares.html'.
+        redirect: Redirección a la lista de reclamos en caso de éxito.
+    """
 
 @app.route('/adherirse', methods=['POST'])
 @login_required
@@ -254,7 +362,16 @@ def adherirse():
     except ValueError as e:
         flash(str(e), "error")
     return redirect(url_for("listar_reclamos"))
+    """
+    Permite a un usuario adherirse a un reclamo existente.
 
+    Recibe el ID del reclamo al que adherirse desde un formulario POST.
+    Llama al gestor de reclamos para registrar la adhesión y muestra un mensaje
+    de éxito o error.
+
+    Returns:
+        redirect: Redirección a la página de listar reclamos después de la operación.
+    """
 @app.route('/mis_reclamos')
 @login_required
 def mis_reclamos():
@@ -263,7 +380,15 @@ def mis_reclamos():
     todos=gestor_reclamos.repo.obtener_todos_los_registros()
     propios= [r for r in todos if r.id_usuario ==usuario_id]
     return render_template("mis_reclamos.html", lista_reclamos=propios)
+    """
+    Muestra la lista de reclamos creados por el usuario actual.
 
+    Filtra todos los reclamos para mostrar solo aquellos cuyo `id_usuario`
+    coincide con el ID del usuario autenticado.
+
+    Returns:
+        render_template: La plantilla 'mis_reclamos.html' con la lista de reclamos del usuario.
+    """
 @app.route("/edit", methods=['GET', 'POST'])
 @login_required
 def editar_reclamo():
@@ -275,7 +400,6 @@ def editar_reclamo():
         nuevo_estado = request.form.get("estado")
         dias_str = request.form.get("tiempo")
         
-        # --- LÓGICA CORREGIDA ---
         # Verificación temprana para una mejor experiencia de usuario
         if nuevo_estado == "en proceso" and not dias_str:
             flash("Para poner un reclamo 'en proceso', debes especificar un tiempo de resolución.", "error")
@@ -294,7 +418,18 @@ def editar_reclamo():
             return render_template("editar_reclamo.html", reclamo=reclamo)
     
     return render_template("editar_reclamo.html", reclamo=reclamo)
+    """
+    Permite a un jefe de departamento o secretario editar el estado de un reclamo.
 
+    - **GET**: Muestra el formulario de edición para un reclamo específico (identificado por ID en la URL).
+    - **POST**: Procesa la actualización del estado del reclamo. Si el nuevo estado es
+      "en proceso", requiere un tiempo de resolución en días (entre 1 y 15).
+      Muestra mensajes de éxito o error.
+
+    Returns:
+        render_template: La plantilla 'editar_reclamo.html' con los detalles del reclamo.
+        redirect: Redirección al dashboard después de una actualización exitosa.
+    """
 @app.route('/analitica')
 @login_required
 def analitica():
@@ -303,12 +438,30 @@ def analitica():
         return redirect(url_for('inicio'))
     stats= gestor_reclamos.obtener_estadisticas(current_user.departamento)
     return render_template("analitica.html", stats=stats)
+    """
+    Muestra las estadísticas y gráficos de los reclamos para el departamento
+    del usuario autenticado (jefe o secretario).
 
+    Requiere que el usuario tenga rol de 'jefe' o 'secretario'.
+    Obtiene las estadísticas del `GestorDeReclamos`, que incluyen el total de reclamos,
+    porcentajes por estado, medianas de tiempo de resolución y las palabras clave más frecuentes.
+
+    Returns:
+        render_template: La plantilla 'analitica.html' con los datos estadísticos.
+        redirect: Redirección a la página de inicio si el acceso es denegado.
+    """
 @app.route('/ayuda')
 @login_required
 def ayuda():
     return render_template("ayuda.html")
+    """
+    Muestra una página de ayuda o tutorial sobre el uso del sistema.
 
+    Es accesible para todos los usuarios logueados.
+
+    Returns:
+        render_template: La plantilla 'ayuda.html'.
+    """
 @app.route('/generar_reporte')
 @login_required
 def generar_reporte():
@@ -346,7 +499,21 @@ def generar_reporte():
             return redirect(url_for('dashboard'))
     else:
         return html_renderizado
+    """
+    Genera un reporte de reclamos para el departamento del usuario actual.
 
+    El reporte puede ser generado en formato HTML (mostrado en el navegador)
+    o PDF (descargable). Obtiene los datos de reclamos y estadísticas del
+    `GestorDeReclamos`. Requiere que el usuario sea jefe o secretario.
+
+    Args:
+        formato (str, opcional): El formato deseado para el reporte ('html' o 'pdf').
+                                  Se obtiene de los parámetros de la URL. Por defecto es 'html'.
+
+    Returns:
+        render_template or Response: El HTML renderizado o un archivo PDF como respuesta.
+        redirect: Redirección al dashboard en caso de error o acceso denegado.
+    """
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
 
