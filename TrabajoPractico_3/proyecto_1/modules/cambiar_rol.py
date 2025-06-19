@@ -43,3 +43,24 @@ else:
     finally:
         if 'conexion' in locals() and conexion:
             conexion.close()
+"""
+Script de utilidad para modificar el rol y departamento de un usuario
+directamente en la base de datos SQLite.
+
+Este script está diseñado para ser ejecutado de forma independiente
+(fuera de la aplicación Flask) con el propósito de realizar cambios
+administrativos directos en los roles de usuario.
+
+Configuración:
+    - USERNAME_A_MODIFICAR (str): El nombre de usuario cuyo rol se desea cambiar.
+    - NUEVO_ROL (str): El nuevo rol que se asignará al usuario (ej. "jefe", "secretario", "usuario").
+    - NUEVO_DEPARTAMENTO (str): El nuevo departamento que se asignará al usuario.
+
+Proceso:
+1. Construye la ruta a la base de datos `base_datos.db`.
+2. Verifica si la base de datos existe.
+3. Se conecta a la base de datos.
+4. Ejecuta una consulta SQL UPDATE para cambiar el `rol` y `departamento`
+   del usuario especificado por `USERNAME_A_MODIFICAR`.
+5. Confirma si se realizó la actualización y muestra un mensaje de éxito o error.
+"""

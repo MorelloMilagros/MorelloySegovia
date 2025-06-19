@@ -16,7 +16,15 @@ def crear_engine():
     Base.metadata.create_all(engine)
     Session= sessionmaker(bind=engine)
     return Session
-
+"""
+Crea y configura el motor de la base de datos SQLAlchemy.
+Inicializa la conexión con la base de datos SQLite definida en `URL_BD`.
+Se asegura de que todas las tablas (definidas en `modules.modelos.Base.metadata`)
+existan en la base de datos. Si no existen, las crea.
+Finalmente, retorna una clase `Session` configurada para interactuar con la base de datos.
+Returns:
+sqlalchemy.orm.sessionmaker: Una clase Sessionmaker configurada.
+"""
 app.config.from_object(__name__)
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["SESSION_FILE_DIR"] = "./flask_session_cache"
