@@ -6,7 +6,9 @@ from modules.gestor_login import GestorDeLogin
 from modules.gestor_reclamos import GestorDeReclamos
 from modules.gestor_usuarios import GestorDeUsuarios
 from modules.formularios import FormRegistro, FormLogin, FormReclamo
-from modules.dominio import Usuario
+from modules.reporte_concreto import ReporteConcreto
+from modules.graficador_concreto import GraficadorMatplotlib
+from modules.analitica import Analitica
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from io import BytesIO
@@ -49,52 +51,9 @@ repo_reclamos, repo_usuarios = crear_repositorio()
 gestor_usuarios = GestorDeUsuarios(repo_usuarios)
 gestor_reclamos = GestorDeReclamos(repo_reclamos, clasificador)
 gestor_login = GestorDeLogin(gestor_usuarios, login_manager, admin_list)
-
-
-# =====================================================================
-# BLOQUE DE ARREGLO AUTOMÁTICO AL INICIAR EL SERVIDOR
-# Esto asegura que el usuario jefe tenga el departamento correcto.
-# =====================================================================
-def arreglar_departamento_jefe():
-    print("\n" + "="*50)
-    print("---[INICIO ARREGLO AUTOMÁTICO DE DATOS]---")
-    try:
-        username_jefe = "Lucas01"
-        depto_correcto = "Soporte técnico"
-        
-        print(f"Buscando al usuario '{username_jefe}'...")
-        jefe = repo_usuarios.obtener_registro_por_filtro("username", username_jefe)
-        
-        if jefe:
-            if jefe.departamento != depto_correcto:
-                print(f"DEPARTAMENTO INCORRECTO ENCONTRADO: '{jefe.departamento}'.")
-                print(f"Cambiando a '{depto_correcto}'...")
-                jefe.departamento = depto_correcto
-                repo_usuarios.modificar_registro(jefe)
-                print(f"¡ÉXITO! El departamento de '{username_jefe}' ha sido corregido.")
-            else:
-                print(f"El departamento de '{username_jefe}' ya es correcto: '{jefe.departamento}'. No se necesita hacer nada.")
-        else:
-            print(f"ADVERTENCIA: No se encontró al usuario '{username_jefe}' en la base de datos.")
-            
-    except Exception as e:
-        print(f"ERROR DURANTE EL ARREGLO AUTOMÁTICO: {e}")
-    finally:
-        print("---[FIN ARREGLO AUTOMÁTICO]---")
-        print("="*50 + "\n")
-
-# Ejecutamos la función de arreglo al iniciar la aplicación
-arreglar_departamento_jefe()
-# =====================================================================
-"""
-Función para corregir automáticamente el departamento de un usuario 'jefe' específico
-al iniciar la aplicación.
-Esto es útil para asegurar la consistencia de los datos iniciales, especialmente
-en entornos de desarrollo o demostración donde se espera que un usuario con un
-nombre de usuario predefinido (ej. "Lucas01") tenga un departamento específico
-("Soporte técnico").
-"""
-
+graficador = GraficadorMatplotlib()
+reportador = ReporteConcreto(gestor_reclamos, graficador)
+analitica_fachada = Analitica(reportador, gestor_reclamos)
 # Página de inicio
 @app.route('/')
 def inicio():
@@ -209,8 +168,8 @@ def dashboard():
         flash("Acceso denegado", "error")
         return redirect(url_for('inicio'))
     try:
-        reclamos= gestor_reclamos.listar_reclamos_por_departamento(current_user.departamento)
-        stats=gestor_reclamos.obtener_estadisticas(current_user.departamento)
+        depto= current_user.departamento
+        reclamos, stats = analitica_fachada.obtener_datos_dashboard(departamento=depto)
     except Exception as e:
         flash(f"Error cargando datos del dashboard: {str(e)}", "error")
         reclamos=[]
@@ -436,8 +395,9 @@ def analitica():
     if not (current_user.es_jefe() or current_user.es_secretario()):
         flash("Acceso no permitido")
         return redirect(url_for('inicio'))
-    stats= gestor_reclamos.obtener_estadisticas(current_user.departamento)
-    return render_template("analitica.html", stats=stats)
+    depto=current_user.departamento
+    _, stats = analitica_fachada.obtener_datos_dashboard(departamento=depto)
+    return render_template("analitica.html", stats=stats, departamento=depto)
     """
     Muestra las estadísticas y gráficos de los reclamos para el departamento
     del usuario autenticado (jefe o secretario).
@@ -450,6 +410,24 @@ def analitica():
         render_template: La plantilla 'analitica.html' con los datos estadísticos.
         redirect: Redirección a la página de inicio si el acceso es denegado.
     """
+
+@app.route('/grafico/<tipo_grafico>/<departamento>')
+@login_required
+def grafico(tipo_grafico, departamento):
+    if not (current_user.es_jefe() or current_user.es_secretario()) or current_user.departamento != departamento:
+        return "Acceso denegado", 403
+    
+    try:
+        # La fachada nos da la imagen del gráfico que pidamos
+        img_bytes = analitica_fachada.obtener_imagen_grafico(tipo_grafico, departamento)
+        if img_bytes is None:
+            return "No hay datos para mostrar el gráfico.", 404
+        return Response(img_bytes, mimetype='image/png')
+    except ValueError as e:
+        return str(e), 400 # Error si el tipo de gráfico no es válido
+    except Exception as e:
+        return f"Error generando el gráfico: {e}", 500
+    
 @app.route('/ayuda')
 @login_required
 def ayuda():
@@ -471,8 +449,8 @@ def generar_reporte():
         return redirect(url_for('inicio'))
     try:
         departamento = current_user.departamento
-        reclamos = gestor_reclamos.listar_reclamos_por_departamento(departamento)
-        stats = gestor_reclamos.obtener_estadisticas(departamento)
+        reclamos, stats = analitica_fachada.obtener_datos_reporte_completo(departamento=departamento)
+
     except Exception as e:
         flash(f"Error al generar los datos del reporte: {str(e)}", "error")
         return redirect(url_for('dashboard'))
