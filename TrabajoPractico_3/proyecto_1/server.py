@@ -186,7 +186,7 @@ Muestra el menú principal para los usuarios finales.
 Requiere que el usuario esté autenticado (`@login_required`).
 Returns:
 render_template: La plantilla 'menu_principal.html'.
-"""
+    """
 @app.route('/logout')
 @login_required
 def logout():
