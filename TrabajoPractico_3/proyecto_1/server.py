@@ -149,7 +149,7 @@ render_template: La plantilla 'menu_principal.html'.
 @app.route('/logout')
 @login_required
 def logout():
-    logout_user()
+    gestor_login.logout_usuario()
     session['username'] = 'Invitado'
     return redirect(url_for('inicio'))
     """

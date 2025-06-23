@@ -1,11 +1,7 @@
 # modules/gestor_reclamos.py
 from modules.dominio import Reclamo
 from modules.repositorio_abstracto import RepositorioAbstracto
-from modules.monticulo_binario import MedianHeap
 from datetime import datetime, timedelta
-from collections import Counter
-from nltk.corpus import stopwords
-
 class GestorDeReclamos:
     """
     Clase que encapsula la lógica de negocio para la gestión de reclamos.
@@ -87,7 +83,7 @@ class GestorDeReclamos:
         resultado = []
         for r in reclamos:
             r_dict = r.to_dict()
-            r_dict['adherentes'] = self.obtener_cantidad_adherentes(r.id)
+            r_dict['adherentes'] = self._obtener_cantidad_adherentes(r.id)
             resultado.append(r_dict)
         return resultado
 
@@ -119,7 +115,7 @@ class GestorDeReclamos:
         resultado = []
         for r in reclamos:
             r_dict = r.to_dict()
-            r_dict['adherentes'] = self.obtener_cantidad_adherentes(r.id)
+            r_dict['adherentes'] = self._obtener_cantidad_adherentes(r.id)
             resultado.append(r_dict)
         return resultado
 
@@ -135,7 +131,7 @@ class GestorDeReclamos:
         resultado = []
         for r in reclamos:
             r_dict = r.to_dict()
-            r_dict['adherentes'] = self.obtener_cantidad_adherentes(r.id)
+            r_dict['adherentes'] = self._obtener_cantidad_adherentes(r.id)
             resultado.append(r_dict)
         return resultado
 
@@ -207,7 +203,7 @@ class GestorDeReclamos:
         """
         self.__repo.adherir_usuario_a_reclamo(id_usuario, id_reclamo)
 
-    def obtener_cantidad_adherentes(self, id_reclamo):
+    def _obtener_cantidad_adherentes(self, id_reclamo):
         """
         Obtiene la cantidad de usuarios adheridos a un reclamo específico.
 
@@ -243,7 +239,7 @@ class GestorDeReclamos:
         """
         return self.__repo.obtener_registro_por_filtro("id", id_reclamo)
 
-    def clasificar_descripcion(self, descripcion):
+    def _clasificar_descripcion(self, descripcion):
         """
         Clasifica una descripción de reclamo en una categoría.
 
@@ -277,7 +273,7 @@ class GestorDeReclamos:
         Returns:
             list: Una lista de objetos Reclamo que son similares (misma categoría).
         """
-        categoria = self.clasificar_descripcion(descripcion)
+        categoria = self._clasificar_descripcion(descripcion)
         todos_reclamos = self.__repo.obtener_todos_los_registros()
         # Filtra los reclamos cuya descripción, al ser clasificada, cae en la misma categoría
         similares = [r for r in todos_reclamos if self.clasificar_descripcion(r.descripcion) == categoria]
