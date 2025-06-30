@@ -87,37 +87,22 @@ class GestorDeReclamos:
             resultado.append(r_dict)
         return resultado
 
+    # En modules/gestor_reclamos.py
+
     def listar_reclamos_por_departamento(self, departamento, estado=None):
         """
-        Lista reclamos filtrados por departamento y opcionalmente por estado.
-
-        Args:
-            departamento (str): El nombre del departamento por el cual filtrar.
-            estado (str, opcional): El estado del reclamo (ej. "pendiente", "resuelto").
-
-        Returns:
-            list: Una lista de diccionarios de reclamos que cumplen con los criterios,
-                  incluyendo la cantidad de adherentes.
-
-        Raises:
-            ValueError: Si el departamento proporcionado es nulo o vacío.
+        Lista reclamos (como OBJETOS) filtrados por departamento y opcionalmente por estado.
         """
         if not departamento or departamento.strip() == "":
             raise ValueError("El departamento no es válido")
 
-        filtros = {"departamento": departamento.strip()}    
+        filtros = {"departamento": departamento.strip()}
         if estado:
             filtros["estado"] = estado
 
-        # Una sola llamada eficiente a la base de datos
-        reclamos = self.__repo.obtener_registros_por_filtros(**filtros)
-
-        resultado = []
-        for r in reclamos:
-            r_dict = r.to_dict()
-            r_dict['adherentes'] = self._obtener_cantidad_adherentes(r.id)
-            resultado.append(r_dict)
-        return resultado
+        # El repositorio ya devuelve una lista de objetos Reclamo, simplemente la retornamos.
+        reclamos_objetos = self.__repo.obtener_registros_por_filtros(**filtros)
+        return reclamos_objetos
 
     def listar_reclamos_para_usuarios(self):
         """

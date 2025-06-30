@@ -25,34 +25,33 @@ class ReporteBase(Reporte, ABC):
         stats = self._calcular_estadisticas(reclamos_dicts)
         return reclamos_dicts, stats
 
-    def _calcular_estadisticas(self, reclamos: list[dict]) -> dict:
+    def _calcular_estadisticas(self, reclamos: list) -> dict:
         """
-        Procesa una lista de diccionarios de reclamos y devuelve estadísticas.
+        Procesa una lista de OBJETOS Reclamo y devuelve estadísticas.
         """
         total = len(reclamos)
-        pendientes = sum(1 for r in reclamos if r.get('estado') == "pendiente")
-        en_proceso = sum(1 for r in reclamos if r.get('estado') == "en proceso")
-        resueltos = sum(1 for r in reclamos if r.get('estado') == "resuelto")
-        invalidos = sum(1 for r in reclamos if r.get('estado') == "inválido")
+        pendientes = sum(1 for r in reclamos if r.estado == "pendiente")
+        en_proceso = sum(1 for r in reclamos if r.estado == "en proceso")
+        resueltos = sum(1 for r in reclamos if r.estado == "resuelto")
+        invalidos = sum(1 for r in reclamos if r.estado == "inválido")
 
         median_heap_resueltos = MedianHeap()
         median_heap_en_proceso = MedianHeap()
 
         for r in reclamos:
-            if r.get('fecha_resolucion') and r.get('fecha_creacion'):
-                fecha_creacion = r['fecha_creacion']
-                fecha_resolucion = r['fecha_resolucion']
-                if isinstance(fecha_creacion, datetime) and isinstance(fecha_resolucion, datetime):
-                    tiempo = (fecha_resolucion - fecha_creacion).days
-                    if r['estado'] == "resuelto":
-                        median_heap_resueltos.insertar(tiempo)
-                    elif r['estado'] == "en proceso":
-                        median_heap_en_proceso.insertar(tiempo)
+            # Usamos el método del objeto, que es mucho más limpio y robusto.
+            tiempo_resolucion = r.calcular_tiempo_resolucion()
+            
+            if r.estado == "resuelto" and tiempo_resolucion is not None:
+                median_heap_resueltos.insertar(tiempo_resolucion)
+            elif r.estado == "en proceso" and tiempo_resolucion is not None:
+                median_heap_en_proceso.insertar(tiempo_resolucion)
 
-        mediana_resueltos = median_heap_resueltos.obtener_mediana() if resueltos > 0 else None
-        mediana_en_proceso = median_heap_en_proceso.obtener_mediana() if en_proceso > 0 else None
+        # Comprobamos el tamaño de los heaps para más seguridad
+        mediana_resueltos = median_heap_resueltos.obtener_mediana() if median_heap_resueltos.size > 0 else None
+        mediana_en_proceso = median_heap_en_proceso.obtener_mediana() if median_heap_en_proceso.size > 0 else None
 
-        texto_completo = ' '.join([r['descripcion'] for r in reclamos])
+        texto_completo = ' '.join([r.descripcion for r in reclamos])
         stop_words_es = set(stopwords.words('spanish'))
         tokens = [p.lower() for p in texto_completo.split() if p.isalpha() and p.lower() not in stop_words_es]
         palabras_clave = Counter(tokens).most_common(15)
@@ -60,6 +59,7 @@ class ReporteBase(Reporte, ABC):
         return {
             "total": total, "pendientes": pendientes, "en_proceso": en_proceso,
             "resueltos": resueltos, "invalidos": invalidos,
-            "mediana_resueltos": mediana_resueltos, "mediana_en_proceso": mediana_en_proceso,
+            "mediana_resueltos": mediana_resueltos,
+            "mediana_en_proceso": mediana_en_proceso,
             "palabras_clave": palabras_clave
         }

@@ -130,7 +130,7 @@ def logout():
 @login_required
 def dashboard():
     """Panel exclusivo para jefes y secretarios"""
-    if not(current_user.es_jefe() or current_user.es_secretario()):
+    if not(current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico()):
         flash("Acceso denegado", "error")
         return redirect(url_for('inicio'))
     try:
@@ -421,7 +421,7 @@ def editar_reclamo():
 @app.route('/analitica')
 @login_required
 def analitica():
-    if not (current_user.es_jefe() or current_user.es_secretario()):
+    if not (current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico()):
         flash("Acceso no permitido")
         return redirect(url_for('inicio'))
     depto=current_user.departamento
@@ -443,7 +443,7 @@ def analitica():
 @app.route('/grafico/<tipo_grafico>/<departamento>')
 @login_required
 def grafico(tipo_grafico, departamento):
-    if not (current_user.es_jefe() or current_user.es_secretario()) or current_user.departamento != departamento:
+    if not (current_user.es_jefe() or current_user.es_secretario()) or current_user.es_tecnico() or current_user.departamento != departamento:
         return "Acceso denegado", 403
     
     try:
@@ -475,7 +475,7 @@ def generar_reporte():
     """
     Controlador "delgado". No contiene lógica, solo delega a la fachada.
     """
-    if not(current_user.es_jefe() or current_user.es_secretario()):
+    if not(current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico()):
         flash("Acceso denegado.", "error")
         return redirect(url_for('inicio'))
 

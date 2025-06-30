@@ -323,7 +323,11 @@ class MedianHeap:
         if self.mediana is None:
             raise ValueError("No hay suficientes elementos para calcular la mediana")
         return self.mediana
-    
+    @property
+    def size(self):
+        """Devuelve el número total de elementos en el montículo."""
+        return self.monticulo_max.tamanoActual + self.monticulo_min.tamanoActual
+
 if __name__=="__main__":
     """
     Bloque de prueba para la clase MedianHeap.

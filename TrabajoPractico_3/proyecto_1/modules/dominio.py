@@ -280,6 +280,15 @@ class Usuario:
             bool: True si el rol es "secretario", False en caso contrario.
         """
         return self.rol == 'secretario'
+    
+    def es_tecnico(self):
+        """
+        Verifica si el usuario tiene el rol de "secretario".
+
+        Returns:
+            bool: True si el rol es "secretario", False en caso contrario.
+        """
+        return self.rol == 'tecnico'
 
     @property
     def is_active(self):

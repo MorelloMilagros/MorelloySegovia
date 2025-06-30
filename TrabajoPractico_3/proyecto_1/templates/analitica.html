@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Analítica - {{ current_user.departamento }}</title>
-    <!-- Librerías para los gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.js"></script>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
@@ -26,8 +25,6 @@
     </style>
 </head>
 <body>
-    <!-- Contenedor de datos para pasar las estadísticas de forma segura de Flask a JavaScript -->
-    <!-- FIX: Added |safe filter to prevent Jinja from escaping JSON quotes -->
     <div id="analytics-data" data-stats='{{ stats | tojson | safe }}' style="display: none;"></div>
 
     <div class="container" style="width: 80%;">
@@ -35,18 +32,31 @@
         <p>Resumen de estadísticas de los reclamos en el departamento.</p>
 
         <div class="grid-container">
-            <!-- Columna Izquierda: Gráfico de torta y medianas -->
             <div class="chart-card">
                 <h3>Distribución de Estados</h3>
                 <canvas id="chartEstados"></canvas>
                 <div class="stats-box" style="margin-top: 20px;">
                     <h3>Tiempo de resolución (mediana)</h3>
-                    <p><strong>Resueltos:</strong> {{ stats.mediana_resueltos or "N/A" }} días</p>
-                    <p><strong>En Proceso:</strong> {{ stats.mediana_en_proceso or "N/A" }} días</p>
-                </div>
+
+                    <p>
+                        <strong>Resueltos:</strong>
+                        {% if stats.mediana_resueltos is not none %}
+                            {{ stats.mediana_resueltos }} días
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </p>
+                    <p>
+                        <strong>En Proceso:</strong>
+                        {% if stats.mediana_en_proceso is not none %}
+                            {{ stats.mediana_en_proceso }} días
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </p>
+                    </div>
             </div>
 
-            <!-- Columna Derecha: Nube de palabras clave -->
             <div class="chart-card">
                 <h3>Palabras Clave en Reclamos</h3>
                 <div id="wordCloudContainer"></div>
@@ -97,6 +107,7 @@
                     WordCloud(wordCloudContainer, {
                         list: palabras.map(function(item) {
                             // item[0] es la palabra, item[1] es la frecuencia
+                            // Multiplicamos la frecuencia para que las palabras más comunes sean más grandes
                             return [item[0], item[1] * 10]; 
                         }),
                         gridSize: Math.round(16 * wordCloudContainer.clientWidth / 1024),

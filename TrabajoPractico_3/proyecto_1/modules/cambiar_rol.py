@@ -1,6 +1,6 @@
 import sqlite3
 import os
-
+#py modules/cambiar_rol.py
 # --- Configuración ---
 # Define el nombre de usuario y el nuevo rol aquí
 USERNAME_A_MODIFICAR = "Lucas01"
