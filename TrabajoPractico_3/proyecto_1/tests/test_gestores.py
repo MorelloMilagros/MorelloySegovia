@@ -64,7 +64,7 @@ class TestGestores(unittest.TestCase):
     def test_clasificar_descripcion_sin_clasificador_falla(self):
         gestor_sin_clf = GestorDeReclamos(self.mock_repo_reclamos, None)
         with self.assertRaisesRegex(ValueError, "Clasificador no configurado"):
-            gestor_sin_clf.clasificar_descripcion("test")
+            gestor_sin_clf._clasificar_descripcion("test")
             
 if __name__ == '__main__':
     unittest.main()

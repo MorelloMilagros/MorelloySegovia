@@ -1,0 +1,32 @@
+# .coveragerc
+# Este archivo configura el comportamiento de la herramienta de coverage.
+
+[run]
+# Le decimos que la fuente de nuestro código está en la carpeta 'modules'.
+source = modules
+
+[report]
+# Esta es la sección más importante.
+# Aquí listamos todos los archivos o patrones que queremos ignorar en el reporte.
+omit =
+    # Excluimos los archivos provistos por la cátedra
+    modules/classifier.py
+    modules/text_vectorizer.py
+    
+    # Excluimos scripts de un solo uso que no son parte de la app principal
+    modules/cambiar_rol.py
+    modules/create_csv.py
+    modules/create_save_clf.py
+    
+    # Excluimos las interfaces abstractas, ya que no tienen lógica para probar
+    modules/reporte_abstracto.py
+    modules/repositorio_abstracto.py
+    modules/graficador_abstracto.py
+    
+    # Excluimos el archivo de configuración de Flask, que no tiene lógica de negocio
+    modules/config.py
+
+# Opcional: Esta línea añade una columna al reporte que muestra
+# los números de línea que NO fueron cubiertos por los tests,
+# lo cual es muy útil para saber qué te falta probar.
+show_missing = True

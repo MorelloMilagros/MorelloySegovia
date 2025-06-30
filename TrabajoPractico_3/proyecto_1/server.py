@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request,flash, redirect, url_for, session, Response
-from flask_login import LoginManager, login_required, current_user
+from flask_login import login_required, current_user
 from modules.config import app, login_manager
 from modules.factoria import crear_repositorio
 from modules.gestor_login import GestorDeLogin
@@ -14,33 +14,6 @@ import os
 
 with open('./data/claims_clf.pkl', 'rb') as archivo:
     clasificador = pickle.load(archivo)
-
-#Configuración básica de Flask
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'clave_12332141'
-app.config["UPLOAD_FOLDER"] = "static/uploads"
-
-
-login_manager=LoginManager()
-login_manager.init_app(app)
-login_manager.login_view= "login"
-
-@login_manager.user_loader
-def load_user(user_id):
-    usuario = gestor_usuarios.cargar_usuario(user_id)
-    return usuario
-    """
-    Carga un usuario desde la base de datos para Flask-Login.
-
-    Esta función es un callback requerido por Flask-Login. Se utiliza para recargar el objeto
-    de usuario a partir del ID de usuario almacenado en la sesión.
-
-    Args:
-        user_id (str): El ID del usuario a cargar.
-
-    Returns:
-        FlaskLoginUser or None: Una instancia de `FlaskLoginUser` si el usuario existe, de lo contrario, `None`.
-    """
 #Crear repositorios y gestores
 admin_list = [1]
 repo_reclamos, repo_usuarios = crear_repositorio()
@@ -52,12 +25,10 @@ analitica_fachada = Analitica(gestor_reclamos, graficador)
 # Página de inicio
 @app.route('/')
 def inicio():
-    """Pagina de inicio con con navegacion a funciones"""
-    if 'username' in session and gestor_login.usuario_autenticado:
-        return redirect(url_for('listar_reclamos'))
-    session['username'] = 'Invitado'
-    lista_reclamos= gestor_reclamos.listar_reclamos()
-    return render_template('inicio.html', user=session['username'], lista_reclamos=lista_reclamos)
+    if current_user.is_authenticated:
+        return redirect(url_for('menu_principal'))
+    lista_reclamos = gestor_reclamos.listar_reclamos_para_usuarios()
+    return render_template('inicio.html', lista_reclamos=lista_reclamos)
     """
     Muestra la página de inicio de la aplicación.
 
@@ -109,7 +80,7 @@ def login():
             usuario=gestor_usuarios.autenticar_usuario(form_login.email.data, form_login.password.data)
             gestor_login.login_usuario(usuario)
             session['username']= gestor_login.nombre_usuario_actual
-            if current_user.es_jefe() or current_user.es_secretario(): # Simplificado
+            if current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico(): # Simplificado
                 return redirect(url_for('dashboard'))
             else:
                 return redirect(url_for('menu_principal'))
@@ -449,7 +420,7 @@ def generar_reporte():
     departamento = current_user.departamento
     
     try:
-        # 1. Se delega TODO el trabajo a la fachada
+        # 1. Se delega todo el trabajo a la fachada
         output, mimetype, headers = analitica_fachada.generar_reporte_formateado(departamento, formato)
         
         # 2. Se envía la respuesta que la fachada preparó
