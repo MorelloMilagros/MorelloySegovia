@@ -276,7 +276,7 @@ class GestorDeReclamos:
         categoria = self._clasificar_descripcion(descripcion)
         todos_reclamos = self.__repo.obtener_todos_los_registros()
         # Filtra los reclamos cuya descripción, al ser clasificada, cae en la misma categoría
-        similares = [r for r in todos_reclamos if self.clasificar_descripcion(r.descripcion) == categoria]
+        similares = [r for r in todos_reclamos if self._clasificar_descripcion(r.descripcion) == categoria]
         return similares
 
     def derivar_reclamo(self, id_reclamo, nuevo_departamento):

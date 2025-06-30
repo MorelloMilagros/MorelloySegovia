@@ -1,7 +1,8 @@
 from datetime import datetime
 from flask import render_template
 from modules.reporte_base import ReporteBase
-
+from xhtml2pdf import pisa
+from io import BytesIO
 class ReporteHTML(ReporteBase):
     """
     Estrategia concreta para generar el reporte en formato HTML.
@@ -24,13 +25,6 @@ class ReporteHTML(ReporteBase):
         )
         return html_renderizado
     
-from datetime import datetime
-from io import BytesIO
-
-from flask import render_template
-from xhtml2pdf import pisa
-
-from modules.reporte_base import ReporteBase
 
 
 class ReportePDF(ReporteBase):

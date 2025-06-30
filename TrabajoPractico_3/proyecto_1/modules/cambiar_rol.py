@@ -3,10 +3,10 @@ import os
 
 # --- Configuración ---
 # Define el nombre de usuario y el nuevo rol aquí
-USERNAME_A_MODIFICAR = "Mili"
-NUEVO_ROL = "secretario"
+USERNAME_A_MODIFICAR = "Lucas01"
+NUEVO_ROL = "jefe"
 # También puedes definir el departamento si quieres cambiarlo al mismo tiempo
-NUEVO_DEPARTAMENTO = "Soporte técnico"
+NUEVO_DEPARTAMENTO = "Soporte informático"
 # -------------------
 
 

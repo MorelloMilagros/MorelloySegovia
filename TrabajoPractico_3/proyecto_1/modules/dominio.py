@@ -489,7 +489,7 @@ class Usuario:
         return {
             "id": self.id,
             "nombre": self.nombre,
-            "apelldio":self.apellido,
+            "apellido":self.apellido,
             "username":self.username,
             "email": self.email,
             "password": self.password,

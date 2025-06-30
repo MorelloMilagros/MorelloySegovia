@@ -220,44 +220,107 @@ def listar_reclamos():
                          y los departamentos disponibles para filtrar.
     """
 
+# @app.route("/agregar_reclamo", methods=["GET", "POST"])
+# @login_required
+# def agregar_reclamo():
+#     """Formulario para crear un reclamo nuevo."""
+#     form_reclamo = FormReclamo()
+#     departamentos_disponibles= gestor_reclamos.obtener_departamentos()
+#     form_reclamo.departamento.choices=[(d,d) for d in departamentos_disponibles]
+
+#     descripcion = form_reclamo.descripcion.data or request.form.get("descripcion")
+#     departamento = form_reclamo.departamento.data or request.form.get("departamento")
+#     id_usuario = int(current_user.id)  
+
+#     foto_archivo=form_reclamo.foto.data
+#     nombre_archivo= None
+
+#     if foto_archivo:
+#         nombre_archivo= secure_filename(foto_archivo.filename)
+#         ruta_archivo= os.path.join(app.config["UPLOAD_FOLDER"], nombre_archivo)
+#         foto_archivo.save(ruta_archivo)
+#     if request.method == "POST":
+#         if not descripcion or not departamento:
+#             flash("Faltan datos: descripción o departamento", "error")
+#             return redirect(url_for("agregar_reclamo"))
+
+#         reclamos_similares = gestor_reclamos.buscar_similares(descripcion)
+#         if reclamos_similares and "descripcion" not in request.form:
+#             return render_template("reclamos_similares.html",
+#                                   similares=reclamos_similares,
+#                                   descripcion=descripcion,
+#                                   departamento=departamento,
+#                                   nombre_archivo=nombre_archivo)
+#         try:
+#             gestor_reclamos.agregar_nuevo_reclamo(descripcion, id_usuario, departamento, p_foto=nombre_archivo)
+#             flash("Reclamo agregado con éxito", "success")
+#             return redirect(url_for("listar_reclamos"))
+#         except Exception as e:  
+#             flash(f"Error al crear el reclamo: {str(e)}", "error ")
+
+#     return render_template("agregar_reclamo.html", form=form_reclamo)
 @app.route("/agregar_reclamo", methods=["GET", "POST"])
 @login_required
 def agregar_reclamo():
-    """Formulario para crear un reclamo nuevo."""
+    """Formulario para crear un reclamo nuevo con lógica de similares."""
     form_reclamo = FormReclamo()
-    departamentos_disponibles= gestor_reclamos.obtener_departamentos()
-    form_reclamo.departamento.choices=[(d,d) for d in departamentos_disponibles]
+    
+    # Poblar las opciones del departamento dinámicamente
+    departamentos_disponibles = gestor_reclamos.obtener_departamentos()
+    form_reclamo.departamento.choices = [(d, d) for d in departamentos_disponibles]
 
-    descripcion = form_reclamo.descripcion.data or request.form.get("descripcion")
-    departamento = form_reclamo.departamento.data or request.form.get("departamento")
-    id_usuario = int(current_user.id)  
-
-    foto_archivo=form_reclamo.foto.data
-    nombre_archivo= None
-
-    if foto_archivo:
-        nombre_archivo= secure_filename(foto_archivo.filename)
-        ruta_archivo= os.path.join(app.config["UPLOAD_FOLDER"], nombre_archivo)
-        foto_archivo.save(ruta_archivo)
-    if request.method == "POST":
-        if not descripcion or not departamento:
-            flash("Faltan datos: descripción o departamento", "error")
-            return redirect(url_for("agregar_reclamo"))
-
-        reclamos_similares = gestor_reclamos.buscar_similares(descripcion)
-        if reclamos_similares and "descripcion" not in request.form:
-            return render_template("reclamos_similares.html",
-                                  similares=reclamos_similares,
-                                  descripcion=descripcion,
-                                  departamento=departamento,
-                                  nombre_archivo=nombre_archivo)
+    # Usamos un campo oculto 'forzar_creacion' para saber si el usuario
+    # ya vio la pantalla de similares y decidió crear uno nuevo de todos modos.
+    if request.method == 'POST' and request.form.get('forzar_creacion'):
+        # CASO 2: El usuario vio los reclamos similares y confirmó que quiere crear uno nuevo.
         try:
+            descripcion = request.form.get('descripcion')
+            departamento = request.form.get('departamento')
+            nombre_archivo = request.form.get('nombre_archivo')
+            id_usuario = int(current_user.id)
+            
             gestor_reclamos.agregar_nuevo_reclamo(descripcion, id_usuario, departamento, p_foto=nombre_archivo)
-            flash("Reclamo agregado con éxito", "success")
+            flash("Reclamo creado con éxito.", "success")
             return redirect(url_for("listar_reclamos"))
-        except Exception as e:  
-            flash(f"Error al crear el reclamo: {str(e)}", "error ")
+        except Exception as e:
+            flash(f"Error al crear el reclamo: {str(e)}", "error")
+            
+    # La validación estándar de Flask-WTF se encarga de verificar si es POST y si los datos son válidos.
+    if form_reclamo.validate_on_submit():
+        # CASO 1: El usuario envía el formulario por primera vez.
+        descripcion = form_reclamo.descripcion.data
+        departamento = form_reclamo.departamento.data
+        foto_archivo = form_reclamo.foto.data
+        nombre_archivo = None
 
+        if foto_archivo:
+            nombre_archivo = secure_filename(foto_archivo.filename)
+            ruta_archivo = os.path.join(app.config["UPLOAD_FOLDER"], nombre_archivo)
+            foto_archivo.save(ruta_archivo)
+
+        # La lógica de búsqueda de similares AHORA FUNCIONA
+        reclamos_similares = gestor_reclamos.buscar_similares(descripcion)
+        
+        if reclamos_similares:
+            # ¡ÉXITO! Se encontraron similares, mostramos la página de selección.
+            return render_template("reclamos_similares.html",
+                                   similares=reclamos_similares,
+                                   descripcion=descripcion,
+                                   departamento=departamento,
+                                   nombre_archivo=nombre_archivo)
+        else:
+            # No se encontraron similares, creamos el reclamo directamente.
+            try:
+                id_usuario = int(current_user.id)
+                gestor_reclamos.agregar_nuevo_reclamo(descripcion, id_usuario, departamento, p_foto=nombre_archivo)
+                flash("Reclamo creado con éxito.", "success")
+                return redirect(url_for("listar_reclamos"))
+            except Exception as e:
+                flash(f"Error al crear el reclamo: {str(e)}", "error")
+
+    # --- FIN DEL FLUJO POST ---
+    
+    # Si la petición es GET, o si el formulario no es válido, se muestra el formulario inicial.
     return render_template("agregar_reclamo.html", form=form_reclamo)
     """
     Permite a un usuario crear un nuevo reclamo.
