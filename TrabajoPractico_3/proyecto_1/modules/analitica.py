@@ -1,49 +1,41 @@
-from modules.reporte_abstracto import Reporte
 from modules.gestor_reclamos import GestorDeReclamos
+from modules.gestor_reclamos import GestorDeReclamos
+from modules.graficador_abstracto import Graficador
+from modules.reporte_concreto import ReporteHTML,ReportePDF
 
 class Analitica:
     """
-    Clase fachada (Facade) que simplifica el acceso al subsistema de reportes y
-    visualizaciones. Es el único punto de entrada que el controlador (server.py)
-    necesita para obtener datos analíticos.
+    Clase fachada (Facade) que actúa como un punto de entrada simplificado
+    para el subsistema de reportes y analítica.
     """
-    def __init__(self, generador_reportes: Reporte, gestor_reclamos: GestorDeReclamos):
-        """
-        Inicializa la fachada con las dependencias necesarias.
-        
-        Args:
-            generador_reportes (Reporte): La implementación concreta para generar reportes.
-            gestor_reclamos (GestorDeReclamos): El gestor para obtener listas de reclamos.
-        """
-        self.__generador_reportes = generador_reportes
-        self.__gestor_reclamos = gestor_reclamos
+    def __init__(self, gestor_reclamos: GestorDeReclamos, graficador: Graficador):
+        self._gestor_reclamos = gestor_reclamos
+        self._graficador = graficador
 
     def obtener_datos_dashboard(self, departamento: str) -> tuple:
         """
-        Obtiene todos los datos necesarios para el dashboard principal.
-        
-        Returns:
-            tuple: Una tupla conteniendo (lista_de_reclamos, estadisticas).
+        Obtiene los datos necesarios para el dashboard.
         """
-        reclamos = self.__gestor_reclamos.listar_reclamos_por_departamento(departamento)
-        stats = self.__generador_reportes.generar_reporte(departamento=departamento)
-        return reclamos, stats
+        # Usamos una de las estrategias para acceder al método compartido _obtener_datos
+        reporte_temp = ReporteHTML(self._gestor_reclamos, self._graficador)
+        return reporte_temp._obtener_datos(departamento)
     
-    def obtener_datos_reporte_completo(self, departamento: str) -> tuple:
+    def generar_reporte_formateado(self, departamento: str, formato: str) -> tuple:
         """
-        Obtiene todos los datos necesarios para la página de analítica o el PDF.
+        Selecciona la estrategia de reporte correcta, la ejecuta y devuelve
+        el resultado listo para ser enviado como una respuesta HTTP.
         """
-        return self.obtener_datos_dashboard(departamento)
-
-    def obtener_imagen_grafico(self, tipo_grafico: str, departamento: str) -> bytes:
-        """
-        Solicita la generación de una imagen de un gráfico específico.
+        if formato == 'pdf':
+            estrategia = ReportePDF(self._gestor_reclamos, self._graficador)
+            mimetype = 'application/pdf'
+            headers = {'Content-Disposition': f'attachment;filename=reporte_{departamento}.pdf'}
+        elif formato == 'html':
+            estrategia = ReporteHTML(self._gestor_reclamos, self._graficador)
+            mimetype = 'text/html'
+            headers = {}
+        else:
+            raise ValueError(f"Formato '{formato}' no soportado.")
         
-        Args:
-            tipo_grafico (str): 'barras', 'torta', o 'nube'.
-            departamento (str): El departamento para el cual generar el gráfico.
-            
-        Returns:
-            bytes: La imagen del gráfico.
-        """
-        return self.__generador_reportes.generar_visualizacion(tipo_grafico, departamento=departamento)
+        output = estrategia.generar(departamento)
+        
+        return (output, mimetype, headers)

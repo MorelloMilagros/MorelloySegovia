@@ -1,18 +1,14 @@
 from flask import Flask, render_template, request,flash, redirect, url_for, session, Response
-from flask_login import LoginManager, login_required, logout_user, current_user
+from flask_login import LoginManager, login_required, current_user
 from modules.config import app, login_manager
 from modules.factoria import crear_repositorio
 from modules.gestor_login import GestorDeLogin
 from modules.gestor_reclamos import GestorDeReclamos
 from modules.gestor_usuarios import GestorDeUsuarios
 from modules.formularios import FormRegistro, FormLogin, FormReclamo
-from modules.reporte_concreto import ReporteConcreto
 from modules.graficador_concreto import GraficadorMatplotlib
 from modules.analitica import Analitica
-from datetime import datetime
 from werkzeug.utils import secure_filename
-from io import BytesIO
-from xhtml2pdf import pisa
 import pickle
 import os
 
@@ -52,8 +48,7 @@ gestor_usuarios = GestorDeUsuarios(repo_usuarios)
 gestor_reclamos = GestorDeReclamos(repo_reclamos, clasificador)
 gestor_login = GestorDeLogin(gestor_usuarios, login_manager, admin_list)
 graficador = GraficadorMatplotlib()
-reportador = ReporteConcreto(gestor_reclamos, graficador)
-analitica_fachada = Analitica(reportador, gestor_reclamos)
+analitica_fachada = Analitica(gestor_reclamos, graficador)
 # Página de inicio
 @app.route('/')
 def inicio():
@@ -443,55 +438,29 @@ def ayuda():
 @app.route('/generar_reporte')
 @login_required
 def generar_reporte():
-    """Genera un reporte de reclamos en formato HTML o PDF usando xhtml2pdf."""
+    """
+    Controlador "delgado". No contiene lógica, solo delega a la fachada.
+    """
     if not(current_user.es_jefe() or current_user.es_secretario()):
         flash("Acceso denegado.", "error")
         return redirect(url_for('inicio'))
+
+    formato = request.args.get('formato', 'html').lower()
+    departamento = current_user.departamento
+    
     try:
-        departamento = current_user.departamento
-        reclamos, stats = analitica_fachada.obtener_datos_reporte_completo(departamento=departamento)
+        # 1. Se delega TODO el trabajo a la fachada
+        output, mimetype, headers = analitica_fachada.generar_reporte_formateado(departamento, formato)
+        
+        # 2. Se envía la respuesta que la fachada preparó
+        return Response(output, mimetype=mimetype, headers=headers)
 
-    except Exception as e:
-        flash(f"Error al generar los datos del reporte: {str(e)}", "error")
+    except ValueError as e: # Captura el error si el formato no es válido
+        flash(str(e), "error")
         return redirect(url_for('dashboard'))
-
-    formato_salida = request.args.get('formato', 'html')
-
-    html_renderizado = render_template('reporte.html',
-                                      lista_reclamos=reclamos,
-                                      stats=stats,
-                                      departamento=departamento,
-                                      fecha_generacion=datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
-    if formato_salida == 'pdf':
-        pdf_buffer = BytesIO()
-        pisa_status = pisa.CreatePDF(
-            BytesIO(html_renderizado.encode('UTF-8')),
-            dest=pdf_buffer)
-        if not pisa_status.err:
-            pdf_buffer.seek(0)
-            return Response(pdf_buffer,
-                            mimetype='application/pdf',
-                            headers={'Content-Disposition': 'attachment;filename=reporte_reclamos.pdf'})
-        else:
-            flash('Hubo un error al generar el archivo PDF.', 'error')
-            return redirect(url_for('dashboard'))
-    else:
-        return html_renderizado
-    """
-    Genera un reporte de reclamos para el departamento del usuario actual.
-
-    El reporte puede ser generado en formato HTML (mostrado en el navegador)
-    o PDF (descargable). Obtiene los datos de reclamos y estadísticas del
-    `GestorDeReclamos`. Requiere que el usuario sea jefe o secretario.
-
-    Args:
-        formato (str, opcional): El formato deseado para el reporte ('html' o 'pdf').
-                                  Se obtiene de los parámetros de la URL. Por defecto es 'html'.
-
-    Returns:
-        render_template or Response: El HTML renderizado o un archivo PDF como respuesta.
-        redirect: Redirección al dashboard en caso de error o acceso denegado.
-    """
+    except Exception as e: # Captura cualquier otro error en la generación
+        flash(f"Error al generar el reporte: {e}", "error")
+        return redirect(url_for('dashboard'))
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
 
