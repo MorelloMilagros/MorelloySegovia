@@ -67,7 +67,6 @@ class FormReclamo(FlaskForm):
         submit (SubmitField): Botón para enviar el reclamo.
     """
     descripcion= TextAreaField("Descripción", validators=[DataRequired(), Length(min=10, max=1000)])
-    departamento= SelectField("Departamento", choices=[], validators=[DataRequired()])
     foto= FileField("Adjuntar Imagen (opcional)", validators=[FileAllowed(['jpg','png','jpeg'], "Solo imágenes")])
     submit=SubmitField("Enviar Reclamo")
     

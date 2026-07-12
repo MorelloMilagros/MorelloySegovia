@@ -19,7 +19,7 @@ class GestorDeReclamos:
         __clasificador (ClaimsClassifier, opcional): Una instancia del clasificador
                                                     de texto para categorizar reclamos.
     """
-    def __init__(self, repo: RepositorioAbstracto, clasificador=None):
+    def __init__(self, repo: RepositorioAbstracto, clasificador=None, label_encoder=None):
         """
         Inicializa el GestorDeReclamos.
 
@@ -31,6 +31,7 @@ class GestorDeReclamos:
         # Se obtiene el número inicial de reclamos. Considerar si esto debe ser dinámico.
         self.__numero_reclamos = len(self.__repo.obtener_todos_los_registros()) 
         self.__clasificador = clasificador
+        self.__label_encoder = label_encoder 
 
     @property
     def repo(self):
@@ -224,7 +225,7 @@ class GestorDeReclamos:
         """
         return self.__repo.obtener_registro_por_filtro("id", id_reclamo)
 
-    def _clasificar_descripcion(self, descripcion):
+    def clasificar_descripcion(self, descripcion):
         """
         Clasifica una descripción de reclamo en una categoría.
 
@@ -239,30 +240,31 @@ class GestorDeReclamos:
         Raises:
             ValueError: Si el clasificador no ha sido configurado en el gestor.
         """
-        if not self.__clasificador:
-            raise ValueError("Clasificador no configurado")
-        # El método clasificar del ClaimsClassifier espera una lista, y devuelve una lista,
-        # por lo que tomamos el primer elemento [0]
-        return self.__clasificador.clasificar([descripcion])[0]
+        if not self.__clasificador or not self.__label_encoder:
+            raise ValueError("Clasificador o LabelEncoder no configurado")
+        # 1. El clasificador predice el NÚMERO
+        prediccion_numerica = self.__clasificador.predict([descripcion])
+        # 2. El LabelEncoder traduce el NÚMERO de vuelta al TEXTO
+        nombre_departamento = self.__label_encoder.inverse_transform(prediccion_numerica)
+        return nombre_departamento[0]
 
     def buscar_similares(self, descripcion):
         """
-        Busca reclamos similares a una descripción dada.
-
-        Primero clasifica la descripción para obtener su categoría, luego
-        busca todos los reclamos existentes que pertenecen a esa misma categoría.
-
-        Args:
-            descripcion (str): La descripción del nuevo reclamo a comparar.
-
-        Returns:
-            list: Una lista de objetos Reclamo que son similares (misma categoría).
+        Busca reclamos similares de forma eficiente.
+        Un reclamo es "similar" si pertenece al mismo departamento que el clasificador
+        sugiere para la nueva descripción.
         """
-        categoria = self._clasificar_descripcion(descripcion)
-        todos_reclamos = self.__repo.obtener_todos_los_registros()
-        # Filtra los reclamos cuya descripción, al ser clasificada, cae en la misma categoría
-        similares = [r for r in todos_reclamos if self._clasificar_descripcion(r.descripcion) == categoria]
-        return similares
+        # 1. Clasificamos la descripción UNA SOLA VEZ para obtener el departamento.
+        departamento_sugerido = self.clasificar_descripcion(descripcion)
+        
+        # 2. Hacemos UNA SOLA CONSULTA a la base de datos pidiendo los reclamos de ese departamento.
+        #    Adicionalmente, solo buscamos entre los que están 'pendientes'.
+        reclamos_similares = self.__repo.obtener_registros_por_filtros(
+            departamento=departamento_sugerido,
+            estado="pendiente"
+        )
+        
+        return reclamos_similares
 
     def derivar_reclamo(self, id_reclamo, nuevo_departamento):
         """

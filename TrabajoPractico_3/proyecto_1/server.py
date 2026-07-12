@@ -9,16 +9,27 @@ from modules.formularios import FormRegistro, FormLogin, FormReclamo
 from modules.graficador_concreto import GraficadorMatplotlib
 from modules.analitica import Analitica
 from werkzeug.utils import secure_filename
+from modules.create_csv import crear_csv
+from sklearn.preprocessing import LabelEncoder
 import pickle
 import os
 
 with open('./data/claims_clf.pkl', 'rb') as archivo:
     clasificador = pickle.load(archivo)
+
+# 1. Cargamos los datos de entrenamiento para obtener las etiquetas originales
+datos_entrenamiento = crear_csv("./data/frases.json")
+etiquetas = datos_entrenamiento['etiqueta']
+
+# 2. Creamos y "entrenamos" un LabelEncoder. Ahora sabe que 0='Soporte Técnico', etc.
+label_encoder = LabelEncoder()
+label_encoder.fit(etiquetas)
+
 #Crear repositorios y gestores
 admin_list = [1]
 repo_reclamos, repo_usuarios = crear_repositorio()
 gestor_usuarios = GestorDeUsuarios(repo_usuarios)
-gestor_reclamos = GestorDeReclamos(repo_reclamos, clasificador)
+gestor_reclamos = GestorDeReclamos(repo_reclamos, clasificador, label_encoder)
 gestor_login = GestorDeLogin(gestor_usuarios, login_manager, admin_list)
 graficador = GraficadorMatplotlib()
 analitica_fachada = Analitica(gestor_reclamos, graficador)
@@ -80,7 +91,7 @@ def login():
             usuario=gestor_usuarios.autenticar_usuario(form_login.email.data, form_login.password.data)
             gestor_login.login_usuario(usuario)
             session['username']= gestor_login.nombre_usuario_actual
-            if current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico(): # Simplificado
+            if current_user.es_jefe() or current_user.es_secretario(): # Simplificado
                 return redirect(url_for('dashboard'))
             else:
                 return redirect(url_for('menu_principal'))
@@ -129,19 +140,36 @@ def logout():
 @app.route('/dashboard', methods=['GET'])
 @login_required
 def dashboard():
-    """Panel exclusivo para jefes y secretarios"""
+    """
+    Panel de Administración.
+    Muestra reclamos filtrados para Jefes y todos los reclamos para Secretarios.
+    """
     if not(current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico()):
         flash("Acceso denegado", "error")
         return redirect(url_for('inicio'))
+    
     try:
-        depto= current_user.departamento
-        reclamos, stats = analitica_fachada.obtener_datos_dashboard(departamento=depto)
+        if current_user.es_secretario():
+            # Para el secretario, no pasamos departamento para obtener todo
+            reclamos, stats = analitica_fachada.obtener_datos_dashboard()
+            # Definimos un título para la vista global
+            titulo_departamento = "Todos los Departamentos"
+        else:
+            # Para el jefe, pasamos su departamento para filtrar
+            depto = current_user.departamento
+            reclamos, stats = analitica_fachada.obtener_datos_dashboard(departamento=depto)
+            titulo_departamento = depto
+
     except Exception as e:
         flash(f"Error cargando datos del dashboard: {str(e)}", "error")
-        reclamos=[]
-        stats={}
+        reclamos = []
+        stats = {}
+        titulo_departamento = "Error"
 
-    return render_template('dashboard.html', lista_reclamos=reclamos, stats=stats)
+    return render_template('dashboard.html', 
+                           lista_reclamos=reclamos, 
+                           stats=stats, 
+                           titulo_departamento=titulo_departamento)
     """
     Muestra el panel de administración para jefes de departamento y secretarios.
 
@@ -187,23 +215,43 @@ def derivar_reclamo(id):
 @app.route('/listar_reclamos', methods=['GET'])
 @login_required
 def listar_reclamos():
-    """Lista todos los reclamos disponibles."""
+    """
+    Lista reclamos. Los usuarios ven reclamos pendientes con filtros.
+    Los jefes ven los de su depto. El secretario ve TODOS los reclamos.
+    """
     departamento_filtro = request.args.get('departamento')
+    
+    # Obtenemos la lista de todos los departamentos para el filtro del usuario
+    departamentos = gestor_reclamos.obtener_departamentos()
+    
+    # --- INICIO DE LA LÓGICA CORREGIDA ---
+    if current_user.is_authenticated and current_user.es_secretario():
+        # Si es secretario, muestra todos los reclamos de todos los departamentos
+        # (usando el filtro si se aplica uno)
+        if departamento_filtro:
+            lista_reclamos = gestor_reclamos.listar_reclamos_por_departamento(departamento_filtro)
+        else:
+            lista_reclamos = gestor_reclamos.repo.obtener_todos_los_registros()
 
-    if current_user.es_jefe() or current_user.es_secretario():
+    elif current_user.is_authenticated and current_user.es_jefe():
+        # Si es jefe, muestra solo los reclamos de su propio departamento, sin filtro
         lista_reclamos = gestor_reclamos.listar_reclamos_por_departamento(current_user.departamento)
+        # Ocultamos el filtro para el jefe, ya que no aplica
+        departamentos = [] 
+        
     else:
+        # Lógica para usuarios finales: solo ven reclamos pendientes
         if departamento_filtro:
             lista_reclamos = gestor_reclamos.listar_reclamos_por_departamento(departamento_filtro, estado="pendiente")
         else:
             lista_reclamos = gestor_reclamos.listar_reclamos_para_usuarios()
-            
-    departamentos = gestor_reclamos.obtener_departamentos()
+    # --- FIN DE LA LÓGICA CORREGIDA ---
 
+    # El template debe estar preparado para recibir objetos Reclamo
     return render_template('listar_reclamos.html', 
-                          lista_reclamos=lista_reclamos, 
-                          departamentos=departamentos, 
-                          departamento_filtro=departamento_filtro)
+                           lista_reclamos=lista_reclamos, 
+                           departamentos=departamentos, 
+                           departamento_filtro=departamento_filtro)
     """
     Lista todos los reclamos disponibles o filtra por departamento.
 
@@ -220,107 +268,60 @@ def listar_reclamos():
                          y los departamentos disponibles para filtrar.
     """
 
-# @app.route("/agregar_reclamo", methods=["GET", "POST"])
-# @login_required
-# def agregar_reclamo():
-#     """Formulario para crear un reclamo nuevo."""
-#     form_reclamo = FormReclamo()
-#     departamentos_disponibles= gestor_reclamos.obtener_departamentos()
-#     form_reclamo.departamento.choices=[(d,d) for d in departamentos_disponibles]
-
-#     descripcion = form_reclamo.descripcion.data or request.form.get("descripcion")
-#     departamento = form_reclamo.departamento.data or request.form.get("departamento")
-#     id_usuario = int(current_user.id)  
-
-#     foto_archivo=form_reclamo.foto.data
-#     nombre_archivo= None
-
-#     if foto_archivo:
-#         nombre_archivo= secure_filename(foto_archivo.filename)
-#         ruta_archivo= os.path.join(app.config["UPLOAD_FOLDER"], nombre_archivo)
-#         foto_archivo.save(ruta_archivo)
-#     if request.method == "POST":
-#         if not descripcion or not departamento:
-#             flash("Faltan datos: descripción o departamento", "error")
-#             return redirect(url_for("agregar_reclamo"))
-
-#         reclamos_similares = gestor_reclamos.buscar_similares(descripcion)
-#         if reclamos_similares and "descripcion" not in request.form:
-#             return render_template("reclamos_similares.html",
-#                                   similares=reclamos_similares,
-#                                   descripcion=descripcion,
-#                                   departamento=departamento,
-#                                   nombre_archivo=nombre_archivo)
-#         try:
-#             gestor_reclamos.agregar_nuevo_reclamo(descripcion, id_usuario, departamento, p_foto=nombre_archivo)
-#             flash("Reclamo agregado con éxito", "success")
-#             return redirect(url_for("listar_reclamos"))
-#         except Exception as e:  
-#             flash(f"Error al crear el reclamo: {str(e)}", "error ")
-
-#     return render_template("agregar_reclamo.html", form=form_reclamo)
 @app.route("/agregar_reclamo", methods=["GET", "POST"])
 @login_required
 def agregar_reclamo():
-    """Formulario para crear un reclamo nuevo con lógica de similares."""
-    form_reclamo = FormReclamo()
-    
-    # Poblar las opciones del departamento dinámicamente
-    departamentos_disponibles = gestor_reclamos.obtener_departamentos()
-    form_reclamo.departamento.choices = [(d, d) for d in departamentos_disponibles]
 
-    # Usamos un campo oculto 'forzar_creacion' para saber si el usuario
-    # ya vio la pantalla de similares y decidió crear uno nuevo de todos modos.
+    form_reclamo = FormReclamo()  
+    # Si el usuario vio los similares y confirmó crear uno nuevo.
     if request.method == 'POST' and request.form.get('forzar_creacion'):
-        # CASO 2: El usuario vio los reclamos similares y confirmó que quiere crear uno nuevo.
         try:
             descripcion = request.form.get('descripcion')
-            departamento = request.form.get('departamento')
+            departamento = request.form.get('departamento_sugerido')
             nombre_archivo = request.form.get('nombre_archivo')
             id_usuario = int(current_user.id)
             
             gestor_reclamos.agregar_nuevo_reclamo(descripcion, id_usuario, departamento, p_foto=nombre_archivo)
-            flash("Reclamo creado con éxito.", "success")
+            flash(f"Reclamo creado exitosamente en el departamento '{departamento}'.", "success")
             return redirect(url_for("listar_reclamos"))
         except Exception as e:
             flash(f"Error al crear el reclamo: {str(e)}", "error")
-            
-    # La validación estándar de Flask-WTF se encarga de verificar si es POST y si los datos son válidos.
+
+    # --- Manejo del POST desde el formulario inicial ---
     if form_reclamo.validate_on_submit():
-        # CASO 1: El usuario envía el formulario por primera vez.
         descripcion = form_reclamo.descripcion.data
-        departamento = form_reclamo.departamento.data
         foto_archivo = form_reclamo.foto.data
         nombre_archivo = None
-
+        
         if foto_archivo:
             nombre_archivo = secure_filename(foto_archivo.filename)
-            ruta_archivo = os.path.join(app.config["UPLOAD_FOLDER"], nombre_archivo)
-            foto_archivo.save(ruta_archivo)
+            ruta_guardado = os.path.join(app.config["UPLOAD_FOLDER"], nombre_archivo)
+            foto_archivo.save(ruta_guardado)
 
-        # La lógica de búsqueda de similares AHORA FUNCIONA
+        # 1. Clasificamos para obtener el departamento sugerido
+        departamento_sugerido = gestor_reclamos.clasificar_descripcion(descripcion)
+        
+        # 2. Buscamos similares en ese departamento
         reclamos_similares = gestor_reclamos.buscar_similares(descripcion)
         
         if reclamos_similares:
-            # ¡ÉXITO! Se encontraron similares, mostramos la página de selección.
+            # 3a. Si hay similares, mostramos la página de selección
             return render_template("reclamos_similares.html",
                                    similares=reclamos_similares,
                                    descripcion=descripcion,
-                                   departamento=departamento,
+                                   departamento_sugerido=departamento_sugerido,
                                    nombre_archivo=nombre_archivo)
         else:
-            # No se encontraron similares, creamos el reclamo directamente.
+            # 3b. Si no hay, creamos el reclamo directamente
             try:
                 id_usuario = int(current_user.id)
-                gestor_reclamos.agregar_nuevo_reclamo(descripcion, id_usuario, departamento, p_foto=nombre_archivo)
-                flash("Reclamo creado con éxito.", "success")
+                gestor_reclamos.agregar_nuevo_reclamo(descripcion, id_usuario, departamento_sugerido, p_foto=nombre_archivo)
+                flash(f"Reclamo creado y asignado al departamento: '{departamento_sugerido}'", "success")
                 return redirect(url_for("listar_reclamos"))
             except Exception as e:
                 flash(f"Error al crear el reclamo: {str(e)}", "error")
 
-    # --- FIN DEL FLUJO POST ---
-    
-    # Si la petición es GET, o si el formulario no es válido, se muestra el formulario inicial.
+    # Si la petición es GET o la validación falla, se muestra el formulario
     return render_template("agregar_reclamo.html", form=form_reclamo)
     """
     Permite a un usuario crear un nuevo reclamo.
@@ -469,32 +470,55 @@ def ayuda():
     Returns:
         render_template: La plantilla 'ayuda.html'.
     """
+
 @app.route('/generar_reporte')
 @login_required
 def generar_reporte():
     """
-    Controlador "delgado". No contiene lógica, solo delega a la fachada.
+    Genera un reporte. Si es secretario, usa el depto. de la URL.
+    Si es jefe, usa su propio depto.
     """
-    if not(current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico()):
+    if not(current_user.es_jefe() or current_user.es_secretario()):
         flash("Acceso denegado.", "error")
         return redirect(url_for('inicio'))
 
     formato = request.args.get('formato', 'html').lower()
-    departamento = current_user.departamento
+    departamento = None
+
+    # Lógica para determinar el departamento
+    if current_user.es_secretario():
+        # Para el secretario, tomamos el departamento de los parámetros de la URL
+        departamento = request.args.get('departamento')
+        if not departamento:
+            flash("Debe seleccionar un departamento para generar el reporte.", "error")
+            return redirect(url_for('seleccionar_reporte'))
+    else:
+        # Para el jefe de departamento, usamos el suyo
+        departamento = current_user.departamento
     
     try:
-        # 1. Se delega todo el trabajo a la fachada
         output, mimetype, headers = analitica_fachada.generar_reporte_formateado(departamento, formato)
-        
-        # 2. Se envía la respuesta que la fachada preparó
         return Response(output, mimetype=mimetype, headers=headers)
-
-    except ValueError as e: # Captura el error si el formato no es válido
+    except ValueError as e:
         flash(str(e), "error")
         return redirect(url_for('dashboard'))
-    except Exception as e: # Captura cualquier otro error en la generación
+    except Exception as e:
         flash(f"Error al generar el reporte: {e}", "error")
         return redirect(url_for('dashboard'))
+    
+@app.route('/seleccionar_reporte')
+@login_required
+def seleccionar_reporte():
+    """Muestra una página para que el secretario elija un reporte departamental."""
+    # Proteger la ruta: solo el secretario puede acceder
+    if not current_user.es_secretario():
+        flash("Acceso denegado.", "error")
+        return redirect(url_for('dashboard'))
+    
+    # Obtener todos los departamentos para el menú desplegable
+    departamentos = gestor_reclamos.obtener_departamentos()
+    return render_template('seleccionar_reporte.html', departamentos=departamentos)
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
 

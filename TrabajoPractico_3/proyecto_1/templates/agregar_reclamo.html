@@ -33,15 +33,6 @@
                     <span class="error-text" style="color: #ff6b6b;">{{ error }}</span>
                 {% endfor %}
             </div>
-
-            <!-- Campo de Departamento (Select) -->
-            <div class="form-group">
-                {{ form.departamento.label(class="form-label") }}<br>
-                {{ form.departamento(class="form-control") }}
-                {% for error in form.departamento.errors %}
-                    <span class="error-text" style="color: #ff6b6b;">{{ error }}</span>
-                {% endfor %}
-            </div>
             
             <!-- Campo para adjuntar Foto -->
             <div class="form-group">

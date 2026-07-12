@@ -6,7 +6,7 @@ import os
 USERNAME_A_MODIFICAR = "Lucas01"
 NUEVO_ROL = "jefe"
 # También puedes definir el departamento si quieres cambiarlo al mismo tiempo
-NUEVO_DEPARTAMENTO = "Soporte informático"
+NUEVO_DEPARTAMENTO = "soporte informático"
 # -------------------
 
 

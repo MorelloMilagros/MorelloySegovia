@@ -78,7 +78,7 @@
         {% endwith %}
 
         <!-- Si el usuario NO es personal, mostrar el filtro por departamento -->
-        {% if not (current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico()) %}
+        {% if not (current_user.es_jefe() or current_user.es_secretario()) %}
             <form method="GET" action="{{ url_for('listar_reclamos') }}" class="filter-form">
                 <label for="departamento">Filtrar por departamento:</label>
                 <select name="departamento" class="form-control">
@@ -128,7 +128,7 @@
                         </td>
                         <td>
                             <!-- El botón de adherirse solo aparece para usuarios finales -->
-                            {% if not (current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico()) %}
+                            {% if not (current_user.es_jefe() or current_user.es_secretario()) %}
                             <form action="{{ url_for('adherirse') }}" method="POST" style="display:inline;">
                                 <input type="hidden" name="id_reclamo" value="{{ reclamo.id }}">
                                 <button type="submit" class="btn-join">Adherirse</button>
@@ -136,7 +136,7 @@
                             {% endif %}
 
                             <!-- El botón de editar solo aparece para el personal -->
-                            {% if current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico() %}
+                            {% if current_user.es_jefe() or current_user.es_secretario()%}
                                 <a href="{{ url_for('editar_reclamo', id=reclamo.id) }}" class="btn-edit">✏️ Editar</a>
                             {% endif %}
                         </td>
@@ -149,7 +149,7 @@
         {% endif %}
 
         <div class="links-container" style="margin-top: 30px;">
-            {% if current_user.es_jefe() or current_user.es_secretario() or current_user.es_tecnico() %}
+            {% if current_user.es_jefe() or current_user.es_secretario() %}
                 <a href="{{ url_for('dashboard') }}" class="btn-primary">Volver al Dashboard</a>
             {% else %}
                 <a href="{{ url_for('menu_principal') }}" class="btn-primary">Volver al Menú</a>

@@ -54,14 +54,6 @@ class FlaskLoginUser(UserMixin):
         """
         return self.rol == "secretario"
 
-    def es_tecnico(self):
-        """
-        Verifica si el usuario tiene el rol de "tecnico".
-
-        Returns:
-            bool: True si el rol es "tecnico", False en caso contrario.
-        """
-        return self.rol == "tecnico"
     
 class GestorDeLogin:
     """

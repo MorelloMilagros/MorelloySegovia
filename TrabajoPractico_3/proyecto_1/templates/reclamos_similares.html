@@ -30,7 +30,9 @@
         <p>Puedes crear un nuevo reclamo de todos modos.</p>
         <form action="{{ url_for('agregar_reclamo') }}" method="POST">
             <input type="hidden" name="descripcion" value="{{ descripcion }}">
-            <input type="hidden" name="departamento" value="{{ departamento }}">
+            
+            <input type="hidden" name="departamento_sugerido" value="{{ departamento_sugerido }}">
+
             <input type="hidden" name="nombre_archivo" value="{{ nombre_archivo or '' }}">
             
             <input type="hidden" name="forzar_creacion" value="true">

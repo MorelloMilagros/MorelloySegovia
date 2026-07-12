@@ -11,14 +11,26 @@ class Analitica:
     def __init__(self, gestor_reclamos: GestorDeReclamos, graficador: Graficador):
         self._gestor_reclamos = gestor_reclamos
         self._graficador = graficador
-
-    def obtener_datos_dashboard(self, departamento: str) -> tuple:
+    
+    def obtener_datos_dashboard(self, departamento: str = None) -> tuple:
         """
         Obtiene los datos necesarios para el dashboard.
+        Si se especifica un 'departamento', filtra por él.
+        Si 'departamento' es None, obtiene TODOS los reclamos.
         """
-        # Usamos una de las estrategias para acceder al método compartido _obtener_datos
+        if departamento:
+            # Flujo normal para un jefe de departamento
+            lista_reclamos = self._gestor_reclamos.listar_reclamos_por_departamento(departamento)
+        else:
+            # Flujo para el secretario: obtener todos los reclamos
+            lista_reclamos = self._gestor_reclamos.repo.obtener_todos_los_registros()
+
+        # Usamos una instancia de Reporte para acceder a la lógica de cálculo
+        # que ya tenemos, pasándole la lista de reclamos (filtrada o completa).
         reporte_temp = ReporteHTML(self._gestor_reclamos, self._graficador)
-        return reporte_temp._obtener_datos(departamento)
+        stats = reporte_temp._calcular_estadisticas(lista_reclamos)
+        
+        return lista_reclamos, stats
     
     def generar_reporte_formateado(self, departamento: str, formato: str) -> tuple:
         """
