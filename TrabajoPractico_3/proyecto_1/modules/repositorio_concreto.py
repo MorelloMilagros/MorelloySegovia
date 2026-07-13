@@ -312,7 +312,7 @@ class RepositorioUsuariosSQLAlchemy(RepositorioAbstracto):
         register = self.__session.query(ModeloUsuario).filter_by(id=usuario_modificado.id).first()
         if register:
             register.nombre = usuario_modificado.nombre
-            register.apelldio= usuario_modificado.apellido
+            register.apellido= usuario_modificado.apellido
             register.username= usuario_modificado.username
             register.email = usuario_modificado.email
             register.password = usuario_modificado.password

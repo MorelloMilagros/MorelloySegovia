@@ -88,12 +88,6 @@ class ModeloUsuario(Base):
         Verifica si el rol del modelo de usuario es "secretario".
         """
         return self.rol == "secretario"
-       
-    def es_tecnico(self):
-        """
-        Verifica si el rol del modelo de usuario es "tecnico".
-        """
-        return self.rol == "tecnico"
     
 class Adherencia(Base):
     """
