@@ -118,14 +118,14 @@ def login():
 @app.route('/menu_principal')
 @login_required
 def menu_principal():
-    """Menú principal que muestra las opciones principales al usuario."""
-    return render_template("menu_principal.html")
-"""
-Muestra el menú principal para los usuarios finales.
-Requiere que el usuario esté autenticado (`@login_required`).
-Returns:
-render_template: La plantilla 'menu_principal.html'.
+    """Menú principal que muestra las opciones principales al usuario.
+    Muestra el menú principal para los usuarios finales.
+    Requiere que el usuario esté autenticado (`@login_required`).
+    Returns:
+    render_template: La plantilla 'menu_principal.html'.
     """
+    return render_template("menu_principal.html")
+
 @app.route('/logout')
 @login_required
 def logout():
@@ -220,7 +220,7 @@ def listar_reclamos():
     """
     Lista reclamos. Los usuarios ven reclamos pendientes con filtros.
     Los jefes ven los de su depto. El secretario ve TODOS los reclamos.
-    """"""
+    
     Lista todos los reclamos disponibles o filtra por departamento.
 
     Permite a los usuarios generales ver reclamos pendientes (con opción de filtrar
@@ -367,7 +367,7 @@ def adherirse():
 @app.route('/mis_reclamos')
 @login_required
 def mis_reclamos():
-    """"Ver reclamos del propio usuario""""""
+    """"Ver reclamos del propio usuario
     Muestra la lista de reclamos creados por el usuario actual.
 
     Filtra todos los reclamos para mostrar solo aquellos cuyo `id_usuario`
@@ -384,7 +384,7 @@ def mis_reclamos():
 @app.route("/edit", methods=['GET', 'POST'])
 @login_required
 def editar_reclamo():
-    """Editar el estado de un reclamo existente.""""""
+    """Editar el estado de un reclamo existente.
     Permite a un jefe de departamento o secretario editar el estado de un reclamo.
 
     - **GET**: Muestra el formulario de edición para un reclamo específico (identificado por ID en la URL).
@@ -440,8 +440,12 @@ def analitica():
     if not (current_user.es_jefe() or current_user.es_secretario()):
         flash("Acceso no permitido")
         return redirect(url_for('inicio'))
-    depto=current_user.departamento
-    _, stats = analitica_fachada.obtener_datos_dashboard(departamento=depto)
+    if current_user.es_secretario():
+        _, stats = analitica_fachada.obtener_datos_dashboard()
+        depto = "Todos los Departamentos"
+    else:
+        depto=current_user.departamento
+        _, stats = analitica_fachada.obtener_datos_dashboard(departamento=depto)
     return render_template("analitica.html", stats=stats, departamento=depto)
     
 

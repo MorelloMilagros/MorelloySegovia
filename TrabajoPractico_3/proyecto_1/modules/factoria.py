@@ -2,11 +2,7 @@ from modules.repositorio_concreto import RepositorioReclamosSQLAlchemy, Reposito
 from modules.config import crear_engine
 
 def crear_repositorio():
-    session= crear_engine()
-    repo_reclamos= RepositorioReclamosSQLAlchemy(session())
-    repo_usuarios= RepositorioUsuariosSQLAlchemy(session())
-    return repo_reclamos, repo_usuarios
-"""
+    """
     Función factoría para crear y retornar instancias de los repositorios.
 
     Utiliza la función `crear_engine` del módulo `config` para obtener una sesión
@@ -19,4 +15,8 @@ def crear_repositorio():
     Returns:
         tuple: Una tupla que contiene (repositorio_reclamos, repositorio_usuarios).
                Cada elemento es una instancia de su respectivo repositorio concreto.
-"""
+    """
+    session= crear_engine()
+    repo_reclamos= RepositorioReclamosSQLAlchemy(session())
+    repo_usuarios= RepositorioUsuariosSQLAlchemy(session())
+    return repo_reclamos, repo_usuarios

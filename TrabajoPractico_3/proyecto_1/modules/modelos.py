@@ -41,7 +41,6 @@ class ModeloReclamo(Base):
         Returns:
             int or None: El número de días si el reclamo está resuelto, de lo contrario, None.
         """
-        """"""
         if self.fecha_resolucion:
             return (self.fecha_resolucion- self.fecha_creacion).days
         else:
@@ -62,7 +61,7 @@ class ModeloUsuario(Base):
         email (String): Correo electrónico. Único y no puede ser nulo.
         password (String): Contraseña hasheada. No puede ser nulo.
         rol (String): Rol del usuario (ej. "usuario", "jefe", "secretario"). Valor por defecto "usuario".
-        claustro (String): Claustro al que pertenece (ej. "estudiante", "docente", "pays"). No puede ser nulo.
+        claustro (String): Claustro al que pertenece (ej. "estudiante", "docente", "pays"). Puede ser nulo.
         departamento (String): Departamento asociado al usuario (para roles de personal). Valor por defecto "sin_departamento".
     """
     __tablename__= 'usuarios'

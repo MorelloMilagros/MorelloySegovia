@@ -321,7 +321,7 @@ class RepositorioUsuariosSQLAlchemy(RepositorioAbstracto):
             register.claustro=usuario_modificado.claustro
             self.__session.commit()
         else:
-            raise ValueError("El usuario no existe en la base de datis")
+            raise ValueError("El usuario no existe en la base de datos")
 
     def obtener_registro_por_filtro(self, filtro, valor):
         """
