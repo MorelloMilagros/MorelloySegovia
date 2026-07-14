@@ -34,11 +34,6 @@ class GestorDeReclamos:
         self.__label_encoder = label_encoder 
 
     @property
-    def repo(self):
-        """Obtiene la instancia del repositorio asociada al gestor."""
-        return self.__repo
-
-    @property
     def numero_reclamos(self):
         """
         Obtiene el número actual de reclamos.
@@ -136,7 +131,7 @@ class GestorDeReclamos:
             ValueError: Si el reclamo no existe, si el nuevo estado es "en proceso"
                         y `dias_resolucion` es nulo o fuera del rango (1-15).
         """
-        reclamo = self.repo.obtener_registro_por_filtro("id", id_reclamo)
+        reclamo = self.__repo.obtener_registro_por_filtro("id", id_reclamo)
         if not reclamo:
             raise ValueError("El reclamo no existe")
 
@@ -159,7 +154,7 @@ class GestorDeReclamos:
         # La lógica actual no la resetea a None si se vuelve de "en proceso" a "pendiente",
         # lo cual podría ser una consideración de diseño.
             
-        self.repo.modificar_registro(reclamo)
+        self.__repo.modificar_registro(reclamo)
 
     def eliminar_reclamo(self, id_reclamo):
         """
@@ -271,7 +266,7 @@ class GestorDeReclamos:
         Cambia el departamento de un reclamo específico.
         Utilizado por la Secretaría Técnica.
         """
-        reclamo = self.repo.obtener_registro_por_filtro("id", id_reclamo)
+        reclamo = self.__repo.obtener_registro_por_filtro("id", id_reclamo)
         if not reclamo:
             raise ValueError("El reclamo a derivar no existe.")
         
@@ -279,7 +274,7 @@ class GestorDeReclamos:
             raise ValueError("Debe seleccionar un departamento diferente para derivar.")
 
         reclamo.departamento = nuevo_departamento
-        self.repo.modificar_registro(reclamo)
+        self.__repo.modificar_registro(reclamo)
 
     def obtener_todos_los_reclamos(self):
         """

@@ -473,7 +473,7 @@ class Usuario:
         Raises:
             ValueError: Si el claustro es inválido.
         """
-        if p_claustro not in ["estudiante", "docente", "pays"]:
+        if p_claustro is not None and p_claustro not in ["estudiante", "docente", "pays"]:
             raise ValueError("Claustro Inválido")
         self.__claustro=p_claustro
         

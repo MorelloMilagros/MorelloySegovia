@@ -1,5 +1,4 @@
 from modules.gestor_reclamos import GestorDeReclamos
-from modules.gestor_reclamos import GestorDeReclamos
 from modules.graficador_abstracto import Graficador
 from modules.reporte_concreto import ReporteHTML,ReportePDF
 

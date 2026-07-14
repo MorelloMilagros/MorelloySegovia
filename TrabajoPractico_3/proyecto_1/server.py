@@ -36,10 +36,6 @@ analitica_fachada = Analitica(gestor_reclamos, graficador)
 # Página de inicio
 @app.route('/')
 def inicio():
-    if current_user.is_authenticated:
-        return redirect(url_for('menu_principal'))
-    lista_reclamos = gestor_reclamos.listar_reclamos_para_usuarios()
-    return render_template('inicio.html', lista_reclamos=lista_reclamos)
     """
     Muestra la página de inicio de la aplicación.
 
@@ -50,9 +46,27 @@ def inicio():
     Returns:
         render_template: La plantilla 'inicio.html' o una redirección.
     """
+    if current_user.is_authenticated:
+        return redirect(url_for('menu_principal'))
+    lista_reclamos = gestor_reclamos.listar_reclamos_para_usuarios()
+    return render_template('inicio.html', lista_reclamos=lista_reclamos)
+    
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """
+    Maneja el registro de nuevos usuarios en el sistema.
+
+    - **GET**: Muestra el formulario de registro.
+    - **POST**: Procesa los datos enviados por el formulario. Valida los datos
+      (usando Flask-WTF) y, si son válidos, intenta registrar al usuario
+      a través del `GestorDeUsuarios`. Si el registro es exitoso, redirige
+      al login; de lo contrario, muestra mensajes de error.
+
+    Returns:
+        render_template: La plantilla 'registro.html' con el formulario.
+        redirect: Redirección a la página de login en caso de éxito.
+    """
     form_registro= FormRegistro()
     if form_registro.validate_on_submit():
         try:
@@ -69,35 +83,10 @@ def register():
             return redirect(url_for("login"))
     return render_template('registro.html', form=form_registro)
 
-    """
-    Maneja el registro de nuevos usuarios en el sistema.
-
-    - **GET**: Muestra el formulario de registro.
-    - **POST**: Procesa los datos enviados por el formulario. Valida los datos
-      (usando Flask-WTF) y, si son válidos, intenta registrar al usuario
-      a través del `GestorDeUsuarios`. Si el registro es exitoso, redirige
-      al login; de lo contrario, muestra mensajes de error.
-
-    Returns:
-        render_template: La plantilla 'registro.html' con el formulario.
-        redirect: Redirección a la página de login en caso de éxito.
-    """
+    
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    form_login= FormLogin()
-    if form_login.validate_on_submit():
-        try:
-            usuario=gestor_usuarios.autenticar_usuario(form_login.email.data, form_login.password.data)
-            gestor_login.login_usuario(usuario)
-            session['username']= gestor_login.nombre_usuario_actual
-            if current_user.es_jefe() or current_user.es_secretario(): # Simplificado
-                return redirect(url_for('dashboard'))
-            else:
-                return redirect(url_for('menu_principal'))
-        except ValueError as e:
-            flash(str(e), "error")
-    return render_template('login.html', form=form_login)
     """
     Maneja el inicio de sesión de usuarios existentes.
 
@@ -112,6 +101,20 @@ def login():
         render_template: La plantilla 'login.html' con el formulario.
         redirect: Redirección al dashboard o menú principal en caso de éxito.
     """
+    form_login= FormLogin()
+    if form_login.validate_on_submit():
+        try:
+            usuario=gestor_usuarios.autenticar_usuario(form_login.email.data, form_login.password.data)
+            gestor_login.login_usuario(usuario)
+            session['username']= gestor_login.nombre_usuario_actual
+            if current_user.es_jefe() or current_user.es_secretario(): # Simplificado
+                return redirect(url_for('dashboard'))
+            else:
+                return redirect(url_for('menu_principal'))
+        except ValueError as e:
+            flash(str(e), "error")
+    return render_template('login.html', form=form_login)
+    
 @app.route('/menu_principal')
 @login_required
 def menu_principal():
@@ -126,9 +129,6 @@ render_template: La plantilla 'menu_principal.html'.
 @app.route('/logout')
 @login_required
 def logout():
-    gestor_login.logout_usuario()
-    session['username'] = 'Invitado'
-    return redirect(url_for('inicio'))
     """
     Cierra la sesión del usuario actual.
 
@@ -137,12 +137,24 @@ def logout():
     Returns:
         redirect: Redirección a la página de inicio.
     """
+    gestor_login.logout_usuario()
+    session['username'] = 'Invitado'
+    return redirect(url_for('inicio'))
+    
 @app.route('/dashboard', methods=['GET'])
 @login_required
 def dashboard():
     """
     Panel de Administración.
-    Muestra reclamos filtrados para Jefes y todos los reclamos para Secretarios.
+    Muestra el panel de administración para jefes de departamento y secretarios.
+
+    Requiere que el usuario esté autenticado y que tenga el rol de 'jefe' o 'secretario'.
+    Si el usuario no tiene el rol adecuado, se deniega el acceso.
+    Muestra una lista de reclamos del departamento del usuario y estadísticas relevantes.
+
+    Returns:
+        render_template: La plantilla 'dashboard.html' con los reclamos y estadísticas.
+        redirect: Redirección a la página de inicio si el acceso es denegado.
     """
     if not(current_user.es_jefe() or current_user.es_secretario()):
         flash("Acceso denegado", "error")
@@ -170,17 +182,7 @@ def dashboard():
                            lista_reclamos=reclamos, 
                            stats=stats, 
                            titulo_departamento=titulo_departamento)
-    """
-    Muestra el panel de administración para jefes de departamento y secretarios.
-
-    Requiere que el usuario esté autenticado y que tenga el rol de 'jefe' o 'secretario'.
-    Si el usuario no tiene el rol adecuado, se deniega el acceso.
-    Muestra una lista de reclamos del departamento del usuario y estadísticas relevantes.
-
-    Returns:
-        render_template: La plantilla 'dashboard.html' con los reclamos y estadísticas.
-        redirect: Redirección a la página de inicio si el acceso es denegado.
-    """
+    
 @app.route('/derivar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def derivar_reclamo(id):
@@ -218,6 +220,20 @@ def listar_reclamos():
     """
     Lista reclamos. Los usuarios ven reclamos pendientes con filtros.
     Los jefes ven los de su depto. El secretario ve TODOS los reclamos.
+    """"""
+    Lista todos los reclamos disponibles o filtra por departamento.
+
+    Permite a los usuarios generales ver reclamos pendientes (con opción de filtrar
+    por departamento). Los usuarios con rol de personal (jefe/secretario/técnico)
+    ven todos los reclamos de su propio departamento, sin la opción de filtro general.
+
+    Args:
+        departamento (str, opcional): El departamento por el cual filtrar los reclamos.
+                                       Se obtiene de los parámetros de la URL.
+
+    Returns:
+        render_template: La plantilla 'listar_reclamos.html' con la lista de reclamos
+                         y los departamentos disponibles para filtrar.
     """
     departamento_filtro = request.args.get('departamento')
     
@@ -252,26 +268,28 @@ def listar_reclamos():
                            lista_reclamos=lista_reclamos, 
                            departamentos=departamentos, 
                            departamento_filtro=departamento_filtro)
-    """
-    Lista todos los reclamos disponibles o filtra por departamento.
-
-    Permite a los usuarios generales ver reclamos pendientes (con opción de filtrar
-    por departamento). Los usuarios con rol de personal (jefe/secretario/técnico)
-    ven todos los reclamos de su propio departamento, sin la opción de filtro general.
-
-    Args:
-        departamento (str, opcional): El departamento por el cual filtrar los reclamos.
-                                       Se obtiene de los parámetros de la URL.
-
-    Returns:
-        render_template: La plantilla 'listar_reclamos.html' con la lista de reclamos
-                         y los departamentos disponibles para filtrar.
-    """
+    
 
 @app.route("/agregar_reclamo", methods=["GET", "POST"])
 @login_required
 def agregar_reclamo():
+    """
+        Permite a un usuario crear un nuevo reclamo.
 
+        - **GET**: Muestra el formulario para crear el reclamo, precargando los
+        departamentos disponibles.
+        - **POST**: Procesa los datos del formulario. Si se detectan reclamos
+        similares basados en la descripción, ofrece la opción de adherirse
+        a uno existente. Si no hay similares o el usuario elige crear uno nuevo,
+        el reclamo se guarda en la base de datos. También maneja la subida de fotos
+        adjuntas al reclamo.
+
+        Muestra mensajes de éxito o error al usuario.
+
+        Returns:
+            render_template: Las plantillas 'agregar_reclamo.html' o 'reclamos_similares.html'.
+            redirect: Redirección a la lista de reclamos en caso de éxito.
+        """
     form_reclamo = FormReclamo()  
     # Si el usuario vio los similares y confirmó crear uno nuevo.
     if request.method == 'POST' and request.form.get('forzar_creacion'):
@@ -323,34 +341,11 @@ def agregar_reclamo():
 
     # Si la petición es GET o la validación falla, se muestra el formulario
     return render_template("agregar_reclamo.html", form=form_reclamo)
-    """
-    Permite a un usuario crear un nuevo reclamo.
-
-    - **GET**: Muestra el formulario para crear el reclamo, precargando los
-      departamentos disponibles.
-    - **POST**: Procesa los datos del formulario. Si se detectan reclamos
-      similares basados en la descripción, ofrece la opción de adherirse
-      a uno existente. Si no hay similares o el usuario elige crear uno nuevo,
-      el reclamo se guarda en la base de datos. También maneja la subida de fotos
-      adjuntas al reclamo.
-
-    Muestra mensajes de éxito o error al usuario.
-
-    Returns:
-        render_template: Las plantillas 'agregar_reclamo.html' o 'reclamos_similares.html'.
-        redirect: Redirección a la lista de reclamos en caso de éxito.
-    """
+    
 
 @app.route('/adherirse', methods=['POST'])
 @login_required
 def adherirse():
-    id_reclamo= request.form.get("id_reclamo")
-    try:
-        gestor_reclamos.adherir_a_reclamo(current_user.id, int(id_reclamo))
-        flash("Te adheriste al reclamo", "success")
-    except ValueError as e:
-        flash(str(e), "error")
-    return redirect(url_for("listar_reclamos"))
     """
     Permite a un usuario adherirse a un reclamo existente.
 
@@ -361,15 +356,18 @@ def adherirse():
     Returns:
         redirect: Redirección a la página de listar reclamos después de la operación.
     """
+    id_reclamo= request.form.get("id_reclamo")
+    try:
+        gestor_reclamos.adherir_a_reclamo(current_user.id, int(id_reclamo))
+        flash("Te adheriste al reclamo", "success")
+    except ValueError as e:
+        flash(str(e), "error")
+    return redirect(url_for("listar_reclamos"))
+    
 @app.route('/mis_reclamos')
 @login_required
 def mis_reclamos():
-    """"Ver reclamos del propio usuario"""
-    usuario_id=int(current_user.id)
-    todos=gestor_reclamos.obtener_todos_los_reclamos()
-    propios= [r for r in todos if r.id_usuario ==usuario_id]
-    return render_template("mis_reclamos.html", lista_reclamos=propios)
-    """
+    """"Ver reclamos del propio usuario""""""
     Muestra la lista de reclamos creados por el usuario actual.
 
     Filtra todos los reclamos para mostrar solo aquellos cuyo `id_usuario`
@@ -378,10 +376,26 @@ def mis_reclamos():
     Returns:
         render_template: La plantilla 'mis_reclamos.html' con la lista de reclamos del usuario.
     """
+    usuario_id=int(current_user.id)
+    todos=gestor_reclamos.obtener_todos_los_reclamos()
+    propios= [r for r in todos if r.id_usuario ==usuario_id]
+    return render_template("mis_reclamos.html", lista_reclamos=propios)
+    
 @app.route("/edit", methods=['GET', 'POST'])
 @login_required
 def editar_reclamo():
-    """Editar el estado de un reclamo existente."""
+    """Editar el estado de un reclamo existente.""""""
+    Permite a un jefe de departamento o secretario editar el estado de un reclamo.
+
+    - **GET**: Muestra el formulario de edición para un reclamo específico (identificado por ID en la URL).
+    - **POST**: Procesa la actualización del estado del reclamo. Si el nuevo estado es
+      "en proceso", requiere un tiempo de resolución en días (entre 1 y 15).
+      Muestra mensajes de éxito o error.
+
+    Returns:
+        render_template: La plantilla 'editar_reclamo.html' con los detalles del reclamo.
+        redirect: Redirección al dashboard después de una actualización exitosa.
+    """
     id_reclamo = request.args.get('id')
     reclamo = gestor_reclamos.obtener_reclamo(id_reclamo)
 
@@ -407,27 +421,10 @@ def editar_reclamo():
             return render_template("editar_reclamo.html", reclamo=reclamo)
     
     return render_template("editar_reclamo.html", reclamo=reclamo)
-    """
-    Permite a un jefe de departamento o secretario editar el estado de un reclamo.
-
-    - **GET**: Muestra el formulario de edición para un reclamo específico (identificado por ID en la URL).
-    - **POST**: Procesa la actualización del estado del reclamo. Si el nuevo estado es
-      "en proceso", requiere un tiempo de resolución en días (entre 1 y 15).
-      Muestra mensajes de éxito o error.
-
-    Returns:
-        render_template: La plantilla 'editar_reclamo.html' con los detalles del reclamo.
-        redirect: Redirección al dashboard después de una actualización exitosa.
-    """
+    
 @app.route('/analitica')
 @login_required
 def analitica():
-    if not (current_user.es_jefe() or current_user.es_secretario()):
-        flash("Acceso no permitido")
-        return redirect(url_for('inicio'))
-    depto=current_user.departamento
-    _, stats = analitica_fachada.obtener_datos_dashboard(departamento=depto)
-    return render_template("analitica.html", stats=stats, departamento=depto)
     """
     Muestra las estadísticas y gráficos de los reclamos para el departamento
     del usuario autenticado (jefe o secretario).
@@ -440,6 +437,13 @@ def analitica():
         render_template: La plantilla 'analitica.html' con los datos estadísticos.
         redirect: Redirección a la página de inicio si el acceso es denegado.
     """
+    if not (current_user.es_jefe() or current_user.es_secretario()):
+        flash("Acceso no permitido")
+        return redirect(url_for('inicio'))
+    depto=current_user.departamento
+    _, stats = analitica_fachada.obtener_datos_dashboard(departamento=depto)
+    return render_template("analitica.html", stats=stats, departamento=depto)
+    
 
 @app.route('/grafico/<tipo_grafico>/<departamento>')
 @login_required
@@ -461,7 +465,6 @@ def grafico(tipo_grafico, departamento):
 @app.route('/ayuda')
 @login_required
 def ayuda():
-    return render_template("ayuda.html")
     """
     Muestra una página de ayuda o tutorial sobre el uso del sistema.
 
@@ -470,6 +473,8 @@ def ayuda():
     Returns:
         render_template: La plantilla 'ayuda.html'.
     """
+    return render_template("ayuda.html")
+    
 
 @app.route('/generar_reporte')
 @login_required

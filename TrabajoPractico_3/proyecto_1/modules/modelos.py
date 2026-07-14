@@ -73,7 +73,7 @@ class ModeloUsuario(Base):
     email= Column(String(1000), nullable=False, unique=True)
     password= Column(String(1000), nullable=False)
     rol=Column(String, default="usuario")
-    claustro=Column(String(100), nullable=False)
+    claustro=Column(String(100), nullable=True)
     departamento = Column(String(100), default="sin_departamento")
 
     #Roles
