@@ -231,7 +231,7 @@ def listar_reclamos():
         if departamento_filtro:
             lista_reclamos = gestor_reclamos.listar_reclamos_por_departamento(departamento_filtro)
         else:
-            lista_reclamos = gestor_reclamos.repo.obtener_todos_los_registros()
+            lista_reclamos = gestor_reclamos.obtener_todos_los_reclamos()
 
     elif current_user.is_authenticated and current_user.es_jefe():
         # Si es jefe, muestra solo los reclamos de su propio departamento, sin filtro
@@ -366,7 +366,7 @@ def adherirse():
 def mis_reclamos():
     """"Ver reclamos del propio usuario"""
     usuario_id=int(current_user.id)
-    todos=gestor_reclamos.repo.obtener_todos_los_registros()
+    todos=gestor_reclamos.obtener_todos_los_reclamos()
     propios= [r for r in todos if r.id_usuario ==usuario_id]
     return render_template("mis_reclamos.html", lista_reclamos=propios)
     """

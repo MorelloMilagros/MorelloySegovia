@@ -295,11 +295,11 @@ class MedianHeap:
         elif self.monticulo_min.tamanoActual > self.monticulo_max.tamanoActual + 1:
             self.monticulo_max.insertar(self.monticulo_min.eliminarMin())
 
-        print("Montículo de máximos completo:", self.monticulo_max.listaMonticulo)
-        print("Montículo de mínimos completo:", self.monticulo_min.listaMonticulo)
+        # print("Montículo de máximos completo:", self.monticulo_max.listaMonticulo)
+        # print("Montículo de mínimos completo:", self.monticulo_min.listaMonticulo)
 
-        print(f"Tamaño montículo_max: {self.monticulo_max.tamanoActual}")
-        print(f"Tamaño montículo_min: {self.monticulo_min.tamanoActual}")
+        # print(f"Tamaño montículo_max: {self.monticulo_max.tamanoActual}")
+        # print(f"Tamaño montículo_min: {self.monticulo_min.tamanoActual}")
 
         # Actualizar la mediana
         if self.monticulo_max.tamanoActual == self.monticulo_min.tamanoActual:

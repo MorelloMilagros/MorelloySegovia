@@ -241,7 +241,7 @@ class GestorDeReclamos:
             ValueError: Si el clasificador no ha sido configurado en el gestor.
         """
         if not self.__clasificador or not self.__label_encoder:
-            raise ValueError("Clasificador o LabelEncoder no configurado")
+            raise ValueError("Clasificador no configurado")
         # 1. El clasificador predice el NÚMERO
         prediccion_numerica = self.__clasificador.predict([descripcion])
         # 2. El LabelEncoder traduce el NÚMERO de vuelta al TEXTO
@@ -280,3 +280,11 @@ class GestorDeReclamos:
 
         reclamo.departamento = nuevo_departamento
         self.repo.modificar_registro(reclamo)
+
+    def obtener_todos_los_reclamos(self):
+        """
+        Obtiene todos los reclamos del sistema.
+        Returns:
+            list[Reclamo]: Una lista con todos los reclamos registrados.
+        """
+        return self.__repo.obtener_todos_los_registros()

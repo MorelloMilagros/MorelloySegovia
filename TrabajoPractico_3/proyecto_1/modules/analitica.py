@@ -23,7 +23,7 @@ class Analitica:
             lista_reclamos = self._gestor_reclamos.listar_reclamos_por_departamento(departamento)
         else:
             # Flujo para el secretario: obtener todos los reclamos
-            lista_reclamos = self._gestor_reclamos.repo.obtener_todos_los_registros()
+            lista_reclamos = self._gestor_reclamos.obtener_todos_los_reclamos()
 
         # Usamos una instancia de Reporte para acceder a la lógica de cálculo
         # que ya tenemos, pasándole la lista de reclamos (filtrada o completa).
@@ -51,3 +51,34 @@ class Analitica:
         output = estrategia.generar(departamento)
         
         return (output, mimetype, headers)
+    
+    def obtener_imagen_grafico(self, tipo_grafico: str, departamento: str) -> bytes:
+        """
+        Genera y devuelve la imagen de un gráfico específico en bytes.
+ 
+        Args:
+            tipo_grafico (str): El tipo de gráfico a generar ('torta' o 'nube').
+            departamento (str): El departamento por el cual filtrar los datos.
+ 
+        Returns:
+            bytes: La imagen del gráfico en formato PNG, o None si no hay datos.
+ 
+        Raises:
+            ValueError: Si el tipo de gráfico no es válido.
+        """
+        lista_reclamos = self._gestor_reclamos.listar_reclamos_por_departamento(departamento)
+        reporte_temp = ReporteHTML(self._gestor_reclamos, self._graficador)
+        stats = reporte_temp._calcular_estadisticas(lista_reclamos)
+ 
+        if tipo_grafico == 'torta':
+            datos_torta = {
+                'Pendientes': stats['pendientes'],
+                'En proceso': stats['en_proceso'],
+                'Resueltos': stats['resueltos'],
+                'Inválidos': stats['invalidos'],
+            }
+            return self._graficador.crear_grafico_torta(datos_torta, f'Reclamos - {departamento}')
+        elif tipo_grafico == 'nube':
+            return self._graficador.crear_nube_palabras(stats['palabras_clave'], f'Palabras clave - {departamento}')
+        else:
+            raise ValueError(f"Tipo de gráfico '{tipo_grafico}' no válido. Use 'torta' o 'nube'.")

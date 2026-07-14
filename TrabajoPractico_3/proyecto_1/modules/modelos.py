@@ -61,7 +61,7 @@ class ModeloUsuario(Base):
         username (String): Nombre de usuario. Único y no puede ser nulo.
         email (String): Correo electrónico. Único y no puede ser nulo.
         password (String): Contraseña hasheada. No puede ser nulo.
-        rol (String): Rol del usuario (ej. "usuario", "jefe", "secretario", "tecnico"). Valor por defecto "usuario".
+        rol (String): Rol del usuario (ej. "usuario", "jefe", "secretario"). Valor por defecto "usuario".
         claustro (String): Claustro al que pertenece (ej. "estudiante", "docente", "pays"). No puede ser nulo.
         departamento (String): Departamento asociado al usuario (para roles de personal). Valor por defecto "sin_departamento".
     """

@@ -234,7 +234,7 @@ class Usuario:
         username (str): Nombre de usuario único para login.
         email (str): Dirección de correo electrónico única del usuario.
         password (str): Contraseña hash del usuario.
-        rol (str): Rol del usuario ("usuario", "jefe", "secretario", "tecnico").
+        rol (str): Rol del usuario ("usuario", "jefe", "secretario").
         departamento (str): Departamento asociado al usuario (si aplica, ej. para jefes).
         claustro (str): Claustro al que pertenece el usuario ("estudiante", "docente", "pays").
     """
