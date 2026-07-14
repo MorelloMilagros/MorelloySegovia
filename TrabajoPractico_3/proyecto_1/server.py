@@ -218,9 +218,6 @@ def derivar_reclamo(id):
 @login_required
 def listar_reclamos():
     """
-    Lista reclamos. Los usuarios ven reclamos pendientes con filtros.
-    Los jefes ven los de su depto. El secretario ve TODOS los reclamos.
-    
     Lista todos los reclamos disponibles o filtra por departamento.
 
     Permite a los usuarios generales ver reclamos pendientes (con opción de filtrar
@@ -367,7 +364,7 @@ def adherirse():
 @app.route('/mis_reclamos')
 @login_required
 def mis_reclamos():
-    """"Ver reclamos del propio usuario
+    """Ver reclamos del propio usuario
     Muestra la lista de reclamos creados por el usuario actual.
 
     Filtra todos los reclamos para mostrar solo aquellos cuyo `id_usuario`
@@ -384,7 +381,7 @@ def mis_reclamos():
 @app.route("/edit", methods=['GET', 'POST'])
 @login_required
 def editar_reclamo():
-    """Editar el estado de un reclamo existente.
+    """
     Permite a un jefe de departamento o secretario editar el estado de un reclamo.
 
     - **GET**: Muestra el formulario de edición para un reclamo específico (identificado por ID en la URL).
