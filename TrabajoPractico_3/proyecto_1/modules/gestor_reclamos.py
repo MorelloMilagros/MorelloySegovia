@@ -98,6 +98,8 @@ class GestorDeReclamos:
 
         # El repositorio ya devuelve una lista de objetos Reclamo, simplemente la retornamos.
         reclamos_objetos = self.__repo.obtener_registros_por_filtros(**filtros)
+        for r in reclamos_objetos:
+            r.adherentes = self._obtener_cantidad_adherentes(r.id)
         return reclamos_objetos
 
     def listar_reclamos_para_usuarios(self):
@@ -282,4 +284,7 @@ class GestorDeReclamos:
         Returns:
             list[Reclamo]: Una lista con todos los reclamos registrados.
         """
-        return self.__repo.obtener_todos_los_registros()
+        reclamos= self.__repo.obtener_todos_los_registros()
+        for r in reclamos:
+            r.adherentes =self._obtener_cantidad_adherentes(r.id)
+        return reclamos

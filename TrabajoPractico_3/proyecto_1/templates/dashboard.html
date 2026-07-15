@@ -213,7 +213,7 @@
                         <td style="max-width: 400px; word-wrap: break-word;">{{ reclamo.descripcion }}</td>
                         <td><span class="status {{ reclamo.estado|replace(' ', '-') }}">{{ reclamo.estado }}</span></td>
                         <td>{{ reclamo.fecha_creacion.strftime('%d/%m/%Y') }}</td>
-                        <td>0</td>
+                        <td>{{ reclamo.adherentes if reclamo.adherentes is defined else 0}} </td>
                         <td>
                             <a href="{{ url_for('editar_reclamo', id=reclamo.id) }}" class="btn-action" style="background-color: #ffc107; color: #212529;">Editar</a>
                             

@@ -5,9 +5,15 @@ from sqlalchemy.orm import sessionmaker
 from flask_login import LoginManager
 import datetime
 from modules.modelos import Base
+import os
 
 app = Flask("ReclamosAPI")
 app.config['SECRET_KEY']= 'clave_12332141'
+
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', 'static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH']= 16*1024*1024 #16MB
 
 URL_BD= 'sqlite:///data/base_datos.db'
 
