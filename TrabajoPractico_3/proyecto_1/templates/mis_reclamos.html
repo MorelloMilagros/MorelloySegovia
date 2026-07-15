@@ -18,7 +18,7 @@
           {% endif %}
         {% endwith %}
 
-        {% if listar_reclamos %}
+        {% if lista_reclamos %}
             <table class="styled-table">
                 <thead>
                     <tr>
@@ -27,20 +27,16 @@
                         <th>Estado</th>
                         <th>Fecha</th>
                         <th>Departamento</th>
-                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for reclamo in listar_reclamos %}
+                    {% for reclamo in lista_reclamos %}
                     <tr>
                         <td>{{ reclamo.id }}</td>
                         <td>{{ reclamo.descripcion }}</td>
                         <td><span class="status {{ reclamo.estado }}">{{ reclamo.estado }}</span></td>
                         <td>{{ reclamo.fecha_creacion.strftime('%d/%m/%Y') }}</td>
                         <td>{{ reclamo.departamento }}</td>
-                        <td>
-                            <a href="{{ url_for('editar_reclamo', id=reclamo.id) }}" class="btn-edit">Editar</a>
-                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

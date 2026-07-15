@@ -382,6 +382,7 @@ def mis_reclamos():
 @login_required
 def editar_reclamo():
     """
+
     Permite a un jefe de departamento o secretario editar el estado de un reclamo.
 
     - **GET**: Muestra el formulario de edición para un reclamo específico (identificado por ID en la URL).
