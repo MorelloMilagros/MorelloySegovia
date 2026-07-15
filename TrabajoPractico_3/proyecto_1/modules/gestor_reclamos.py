@@ -76,12 +76,9 @@ class GestorDeReclamos:
                   e incluye un campo 'adherentes' con la cantidad de usuarios adheridos.
         """
         reclamos = self.__repo.obtener_registros_por_filtros() # Asume que sin filtros trae todo
-        resultado = []
-        for r in reclamos:
-            r_dict = r.to_dict()
-            r_dict['adherentes'] = self._obtener_cantidad_adherentes(r.id)
-            resultado.append(r_dict)
-        return resultado
+        for r in reclamos: 
+            r.adherentes = self._obtener_cantidad_adherentes(r.id)
+        return reclamos
 
     # En modules/gestor_reclamos.py
 
@@ -111,12 +108,9 @@ class GestorDeReclamos:
                   incluyendo la cantidad de adherentes.
         """
         reclamos = self.__repo.obtener_registros_por_filtros(estado="pendiente")
-        resultado = []
         for r in reclamos:
-            r_dict = r.to_dict()
-            r_dict['adherentes'] = self._obtener_cantidad_adherentes(r.id)
-            resultado.append(r_dict)
-        return resultado
+            r.adherentes = self._obtener_cantidad_adherentes(r.id)
+        return reclamos
 
     def actualizar_estado_reclamo(self, id_reclamo, nuevo_estado, dias_resolucion=None):
         """
